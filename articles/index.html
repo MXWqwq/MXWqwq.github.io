@@ -1,0 +1,192 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Articles | The past</title><meta name="author" content="John Doe"><meta name="copyright" content="John Doe"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="（内容由AI生成，仅供参考）">
+<meta property="og:type" content="website">
+<meta property="og:title" content="文章">
+<meta property="og:url" content="https://mxwqwq.github.io/articles/index.html">
+<meta property="og:site_name" content="The past">
+<meta property="og:description" content="（内容由AI生成，仅供参考）">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mxwqwq.github.io/img/butterfly-icon.png">
+<meta property="article:published_time" content="2026-10-14T02:10:57.695Z">
+<meta property="article:modified_time" content="2026-10-09T01:09:43.935Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mxwqwq.github.io/img/butterfly-icon.png"><script type="application/ld+json"></script><link rel="shortcut icon" href="/img/favicon.ico"><link rel="canonical" href="https://mxwqwq.github.io/articles/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.7.1.260811"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.3.1/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        try {
+          const data = { value }
+
+          if (ttl != null) {
+            data.expiry = Date.now() + ttl * 86400000
+          }
+
+          localStorage.setItem(key, JSON.stringify(data))
+        } catch (e) {
+          console.error(e)
+        }
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '文章',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'article-module'
+}</script><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=JetBrains+Mono:wght@400&display=swap"><link rel="stylesheet" href="/css/custom.css?v=20261014f"><meta name="generator" content="Hexo 7.3.0"></head><body><div class="page" id="body-wrap"><header class="not-top-img" id="page-header"><h1 class="title-seo">文章</h1></header><nav id="nav"><span id="blog-info"><span class="nav-site-title"><span class="site-name">The past</span></span></span><div id="menus"><div class="menus_items"><a class="menus_item" href="/" data-path="/"><i class="fas fa-house fa-fw"></i><span>主页</span></a><a class="menus_item active" href="/articles/" data-path="/articles/"><i class="fas fa-file-pen fa-fw"></i><span>文章</span></a><a class="menus_item" href="/tags/" data-path="/tags/"><i class="fas fa-clock fa-fw"></i><span>动态</span></a><a class="menus_item" href="/about/" data-path="/about/"><i class="fas fa-circle-info fa-fw"></i><span>关于</span></a><a class="menus_item" href="/links/" data-path="/links/"><i class="fas fa-link fa-fw"></i><span>一些链接</span></a></div></div><div id="nav-right-icons"><div class="nav-icon-btn" id="nav-search-btn"><i class="fas fa-magnifying-glass fa-fw"></i></div><div class="nav-icon-btn" id="nav-theme-btn"><i class="fas fa-sun fa-fw"></i><div class="gf-theme-pop"><div class="gf-theme-option" data-gf-theme="light"><span class="gf-theme-ico">☀</span><span class="gf-theme-text">light</span></div><div class="gf-theme-option" data-gf-theme="dark"><span class="gf-theme-ico">☾</span><span class="gf-theme-text">dark</span></div></div></div><a class="nav-icon-btn" id="nav-user-btn" href="/about/"><i class="fas fa-user fa-fw"></i></a></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></nav><main class="layout hide-aside" id="content-inner"><div id="article-module"><div class="gf-am-head"><h1 class="gf-am-title">一些文章</h1><div class="gf-am-breadcrumb"><span>文章</span></div></div><div class="gf-am-shell"><nav class="gf-am-side" aria-label="文章导航"><span class="gf-bm-dot" aria-hidden="true"></span><span class="gf-bm-line" aria-hidden="true"></span><div class="gf-bm-tags"><a class="gf-am-nav-item gf-am-nav-root active" href="/articles/" data-am="posts"><span class="gf-am-nav-ico"><i class="fas fa-file-lines fa-fw"></i></span><span class="gf-am-nav-text">文章</span><i class="fas fa-arrow-right gf-am-nav-arrow"></i></a><a class="gf-am-nav-item" href="/articles/tags/" data-am="tags"><span class="gf-am-nav-ico"><i class="fas fa-tags fa-fw"></i></span><span class="gf-am-nav-text">标签</span><i class="fas fa-arrow-right gf-am-nav-arrow"></i></a><a class="gf-am-nav-item" href="/articles/categories/" data-am="categories"><span class="gf-am-nav-ico"><i class="fas fa-folder fa-fw"></i></span><span class="gf-am-nav-text">目录</span><i class="fas fa-arrow-right gf-am-nav-arrow"></i></a><a class="gf-am-nav-item" href="/articles/archives/" data-am="archives"><span class="gf-am-nav-ico"><i class="fas fa-box-archive fa-fw"></i></span><span class="gf-am-nav-text">归档</span><i class="fas fa-arrow-right gf-am-nav-arrow"></i></a></div></nav><div class="gf-am-content"><div class="gf-article-list"><a class="gf-article-card" href="/2026/10/12/2026-10-12-soft-rain/" title="温柔的雨天"><div class="gf-article-body"><div class="gf-article-tags"><span class="gf-article-tag">随笔</span><span class="gf-article-tag-sep">·</span><span class="gf-article-tag">生活</span></div><h2 class="gf-article-title">温柔的雨天</h2><p class="gf-article-desc">温柔的雨天 窗外雨声细细密密，像有人用指尖轻轻敲着玻璃。这种天气最适合窝在沙发里，泡一杯热茶，读几页闲书。 雨天并不总是阴沉的。有时候，它只是天空在温柔地叹气。 关于这张封面 文章的封面是朋友拍的照片，取名叫「柔柔」。照…</p><div class="gf-article-meta"><div class="gf-meta-left"><span class="gf-meta-item"><i class="fas fa-calendar-days fa-fw"></i><time datetime="2026-10-12">2026-10-12</time></span><span class="gf-meta-item"><i class="fas fa-file-lines fa-fw"></i><span>224字</span></span></div><span class="gf-article-arrow"><i class="fas fa-arrow-right"></i></span></div></div><div class="gf-article-cover"><img src="/img/%E6%9F%94%E6%9F%94.jpg" alt="温柔的雨天" loading="lazy"></div></a><a class="gf-article-card" href="/2026/10/11/weekend-cooking/" title="番茄牛腩"><div class="gf-article-body"><div class="gf-article-tags"><span class="gf-article-tag">生活</span></div><h2 class="gf-article-title">番茄牛腩</h2><p class="gf-article-desc">最近工作忙，外卖吃了大半个月，周末决定好好给自己做顿饭。菜市场逛了一圈，买了牛腩、番茄、西兰花、鸡蛋和紫菜，总共不到五十块钱，够吃两顿。 番茄牛腩 做法很简单： 牛腩切块，冷水下锅焯水，捞出洗净； 番茄一半切丁、一半切块…</p><div class="gf-article-meta"><div class="gf-meta-left"><span class="gf-meta-item"><i class="fas fa-calendar-days fa-fw"></i><time datetime="2026-10-11">2026-10-11</time></span><span class="gf-meta-item"><i class="fas fa-file-lines fa-fw"></i><span>425字</span></span></div><span class="gf-article-arrow"><i class="fas fa-arrow-right"></i></span></div></div><div class="gf-title-cover gf-tc-1"><span class="gf-tc-kicker">MERORY</span><span class="gf-tc-title">番茄牛腩</span><span class="gf-tc-slogan">Small steps, gentle words, slow days.</span></div></a><a class="gf-article-card" href="/2026/10/11/reading-silent-patient/" title="关于沉默"><div class="gf-article-body"><div class="gf-article-tags"><span class="gf-article-tag">读书</span></div><h2 class="gf-article-title">关于沉默</h2><p class="gf-article-desc">花了两个晚上读完《沉默的病人》。故事并不复杂：女画家艾丽西亚射杀了丈夫，此后五年不发一言，心理治疗师西奥试图让她开口。但读到最后一章，整本书的拼图翻转过来，我才意识到前面那些看似闲笔的细节全都是伏笔。 关于沉默 艾丽西亚…</p><div class="gf-article-meta"><div class="gf-meta-left"><span class="gf-meta-item"><i class="fas fa-calendar-days fa-fw"></i><time datetime="2026-10-11">2026-10-11</time></span><span class="gf-meta-item"><i class="fas fa-file-lines fa-fw"></i><span>460字</span></span></div><span class="gf-article-arrow"><i class="fas fa-arrow-right"></i></span></div></div><div class="gf-title-cover gf-tc-2"><span class="gf-tc-kicker">MERORY</span><span class="gf-tc-title">关于沉默</span><span class="gf-tc-slogan">A quiet garden of thoughts &amp; code.</span></div></a><a class="gf-article-card" href="/2026/10/11/js-closure-notes/" title="什么是闭包"><div class="gf-article-body"><div class="gf-article-tags"><span class="gf-article-tag">技术</span></div><h2 class="gf-article-title">什么是闭包</h2><p class="gf-article-desc">闭包（Closure）是 JavaScript 里最常被提起、也最容易讲不清楚的概念之一。这篇笔记整理一下我自己的理解。 什么是闭包 简单说，闭包就是「函数 + 它创建时所处的词法环境」。当一个函数引用了它外层作用域的变…</p><div class="gf-article-meta"><div class="gf-meta-left"><span class="gf-meta-item"><i class="fas fa-calendar-days fa-fw"></i><time datetime="2026-10-11">2026-10-11</time></span><span class="gf-meta-item"><i class="fas fa-file-lines fa-fw"></i><span>590字</span></span></div><span class="gf-article-arrow"><i class="fas fa-arrow-right"></i></span></div></div><div class="gf-title-cover gf-tc-3"><span class="gf-tc-kicker">MERORY</span><span class="gf-tc-title">什么是闭包</span><span class="gf-tc-slogan">Notes from a misty morning garden.</span></div></a><a class="gf-article-card" href="/2026/10/11/jiangnan-travel/" title="第一日：乌镇"><div class="gf-article-body"><div class="gf-article-tags"><span class="gf-article-tag">旅行</span></div><h2 class="gf-article-title">第一日：乌镇</h2><p class="gf-article-desc">十一假期前请了三天假，凑出一个短暂的江南行程。路线很简单：乌镇住一晚，西塘住一晚，最后一天绕到绍兴喝黄酒。全程高铁加公交，没开车，倒也轻松。 第一日：乌镇 清晨五点半的乌镇几乎没有人。河水是青灰色的，倒映着两岸的白墙黑瓦…</p><div class="gf-article-meta"><div class="gf-meta-left"><span class="gf-meta-item"><i class="fas fa-calendar-days fa-fw"></i><time datetime="2026-10-11">2026-10-11</time></span><span class="gf-meta-item"><i class="fas fa-file-lines fa-fw"></i><span>536字</span></span></div><span class="gf-article-arrow"><i class="fas fa-arrow-right"></i></span></div></div><div class="gf-title-cover gf-tc-0"><span class="gf-tc-kicker">MERORY</span><span class="gf-tc-title">第一日：乌镇</span><span class="gf-tc-slogan">Let every petal tell its own story.</span></div></a><a class="gf-article-card" href="/2026/10/11/afternoon-rain/" title="窗外的雨"><div class="gf-article-body"><div class="gf-article-tags"><span class="gf-article-tag">随笔</span></div><h2 class="gf-article-title">窗外的雨</h2><p class="gf-article-desc">周五下午开始下雨。雨不大，却很绵，密密地落在窗台上，把整条街都洗成一种安静的灰绿色。我关掉电脑屏幕，给自己倒了一杯热茶，坐到窗边。 窗外的雨 雨点敲在玻璃上，发出很轻的声响。楼下的行人撑着伞，走得比平时慢。卖糖炒栗子的小…</p><div class="gf-article-meta"><div class="gf-meta-left"><span class="gf-meta-item"><i class="fas fa-calendar-days fa-fw"></i><time datetime="2026-10-11">2026-10-11</time></span><span class="gf-meta-item"><i class="fas fa-file-lines fa-fw"></i><span>439字</span></span></div><span class="gf-article-arrow"><i class="fas fa-arrow-right"></i></span></div></div><div class="gf-title-cover gf-tc-1"><span class="gf-tc-kicker">MERORY</span><span class="gf-tc-title">窗外的雨</span><span class="gf-tc-slogan">Where grey meets a touch of blue.</span></div></a><a class="gf-article-card" href="/2026/10/09/hello-world/" title="Hello World"><div class="gf-article-body"><div class="gf-article-tags"><span class="gf-article-tag">Hexo</span><span class="gf-article-tag-sep">·</span><span class="gf-article-tag">Welcome</span></div><h2 class="gf-article-title">Hello World</h2><p class="gf-article-desc">你好，世界。这是博客的第一篇文章。</p><div class="gf-article-meta"><div class="gf-meta-left"><span class="gf-meta-item"><i class="fas fa-calendar-days fa-fw"></i><time datetime="2026-10-09">2026-10-09</time></span><span class="gf-meta-item"><i class="fas fa-file-lines fa-fw"></i><span>78字</span></span></div><span class="gf-article-arrow"><i class="fas fa-arrow-right"></i></span></div></div><div class="gf-title-cover gf-tc-2"><span class="gf-tc-kicker">MERORY</span><span class="gf-tc-title">Hello World</span><span class="gf-tc-slogan">The past is never dead, it's not even past</span></div></a></div></div></div></div></main><footer id="footer"><div class="gf-footer-wrap"><div class="gf-footer-row gf-footer-nav"><span class="gf-footer-label">导航</span><span class="gf-footer-arrow">›</span><a class="gf-footer-link" href="/articles/" data-path="/articles/">文章</a><span class="gf-footer-sep">|</span><a class="gf-footer-link" href="/tags/" data-path="/tags/">动态</a><span class="gf-footer-sep">|</span><a class="gf-footer-link" href="/about/" data-path="/about/">关于</a><span class="gf-footer-sep">|</span><a class="gf-footer-link" href="/links/" data-path="/links/">友链</a></div><div class="gf-footer-row gf-footer-contact"><span class="gf-footer-label">联系我</span><span class="gf-footer-arrow">›</span><a class="gf-sns-chip" href="https://github.com/MXWqwq" target="_blank" rel="noopener" data-tip="GitHub" style="--sns-color:#3d3d3d"><i class="fa-fw fa-brands fa-github"></i><span>GitHub</span></a><a class="gf-sns-chip" href="https://qm.qq.com/q/A8AhaoFYNU" target="_blank" rel="noopener" data-tip="QQ" style="--sns-color:#0099FF"><i class="fa-fw fa-brands fa-qq"></i><span>QQ</span></a><a class="gf-sns-chip" href="https://space.bilibili.com/339823308?spm_id_from=333.1387.0.0" target="_blank" rel="noopener" data-tip="BiliBili" style="--sns-color:#FB7299"><i class="fa-fw fa-brands fa-bilibili"></i><span>BiliBili</span></a><a class="gf-sns-chip" href="https://music.163.com/#/user/home?id=1463708606" target="_blank" rel="noopener" data-tip="网易云" style="--sns-color:#C20C0C"><svg class="gf-sns-svg" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true"><path d="M13.046 9.388a3.919 3.919 0 0 0-.66.19c-.809.312-1.447.991-1.666 1.775a2.269 2.269 0 0 0-.074.81c.048.546.333 1.05.764 1.35a1.483 1.483 0 0 0 2.01-.286c.406-.531.355-1.183.24-1.636-.098-.387-.22-.816-.345-1.249a64.76 64.76 0 0 1-.269-.954zm-.82 10.07c-3.984 0-7.224-3.24-7.224-7.223 0-.98.226-3.02 1.884-4.822A7.188 7.188 0 0 1 9.502 5.6a.792.792 0 1 1 .587 1.472 5.619 5.619 0 0 0-2.795 2.462 5.538 5.538 0 0 0-.707 2.7 5.645 5.645 0 0 0 5.638 5.638c1.844 0 3.627-.953 4.542-2.428 1.042-1.68.772-3.931-.627-5.238a3.299 3.299 0 0 0-1.437-.777c.172.589.334 1.18.494 1.772.284 1.12.1 2.181-.519 2.989-.39.51-.956.888-1.592 1.064a3.038 3.038 0 0 1-2.58-.44 3.45 3.45 0 0 1-1.44-2.514c-.04-.467.002-.93.128-1.376.35-1.256 1.356-2.339 2.622-2.826a5.5 5.5 0 0 1 .823-.246l-.134-.505c-.37-1.371.25-2.579 1.547-3.007.329-.109.68-.145 1.025-.105.792.09 1.476.592 1.709 1.023.258.507-.096 1.153-.706 1.153a.788.788 0 0 1-.54-.213c-.088-.08-.163-.174-.259-.247a.825.825 0 0 0-.632-.166.807.807 0 0 0-.634.551c-.056.191-.031.406.02.595.07.256.159.597.217.82 1.11.098 2.162.54 2.97 1.296 1.974 1.844 2.35 4.886.892 7.233-1.197 1.93-3.509 3.177-5.889 3.177zM0 12c0 6.627 5.373 12 12 12s12-5.373 12-12S18.627 0 12 0 0 5.373 0 12Z"></path></svg><span>网易云</span></a></div><div class="gf-footer-row gf-footer-quote"><span>失去"未来"的双翼，沦为"过去"的奴隶</span></div><div class="gf-footer-row gf-footer-legal"><span>Copyright © 2025 - 2026 The past</span><span class="gf-footer-sep">|</span><span>Powered by </span><a class="gf-footer-powered" href="https://github.com/MXWqwq/MXWqwq.github.io" target="_blank" rel="noopener">The past</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="gf-music-btn" type="button" title="音乐播放器"><i class="fas fa-music gf-music-icon"></i><span class="gf-eq" aria-hidden="true"><span></span><span></span><span></span></span></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div id="gf-music-panel" aria-hidden="true"><div class="gf-music-head"><img class="gf-music-cover" src="/img/thanks-cherry-pie.jpg" alt="cover"><div class="gf-music-meta"><p class="gf-music-title">Thanks</p><p class="gf-music-artist">Cherry pie</p></div></div><div class="gf-music-controls"><button class="gf-music-btn gf-music-rewind" type="button" title="倒退10秒"><i class="fas fa-backward-step"></i></button><button class="gf-music-btn gf-music-toggle" type="button" title="播放/暂停"><i class="fas fa-play"></i></button><button class="gf-music-btn gf-music-forward" type="button" title="快进10秒"><i class="fas fa-forward-step"></i></button><div class="gf-music-volume-wrap"><button class="gf-music-vol-btn" type="button" title="音量"><i class="fas fa-volume-high"></i></button><div class="gf-music-vol-pop"><input class="gf-music-vol" type="range" min="0" max="100" value="50" aria-label="音量"></div></div></div><div class="gf-music-times"><span class="gf-music-cur">0:00</span><span class="gf-music-total">0:00</span></div><div class="gf-music-progress"><input class="gf-music-progress-bar" type="range" min="0" max="100" step="0.1" value="0" aria-label="播放进度"></div></div><audio id="gf-music-audio" preload="auto" src="/music/thanks.mp3"></audio><div><script src="/js/utils.js?v=5.7.1.260811"></script><script src="/js/main.js?v=5.7.1.260811"></script><div class="js-pjax"></div><script src="/js/custom.js?v=20261013t" defer></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
