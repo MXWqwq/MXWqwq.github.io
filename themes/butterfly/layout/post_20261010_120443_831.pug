@@ -1,0 +1,79 @@
+extends includes/layout.pug
+
+block content
+  #post.gf-post-page
+    .gf-post-main
+      header.gf-post-head
+        .gf-post-head-meta
+          if page.categories.data.length
+            a.gf-post-cat-link(href=url_for(page.categories.data[0].path)) #[=page.categories.data[0].name]
+            span.gf-post-head-sep |
+          span.gf-post-head-author #[=config.author]
+          span.gf-post-head-sep |
+          time.gf-post-head-date(datetime=date_xml(page.date))= gf_date_str(page.date)
+          if theme.wordcount.enable && theme.wordcount.post_wordcount
+            span.gf-post-head-sep |
+            span.gf-post-head-words
+              span= gf_word_count(page.content)
+              | 字
+        h1.gf-post-title= page.title
+        if gf_post_desc(page)
+          p.gf-post-subtitle= gf_post_desc(page)
+      article#article-container.container.post-content.gf-post-body
+        if theme.noticeOutdate.enable && page.noticeOutdate !== false
+          include includes/post/outdate-notice.pug
+        else
+          !=page.content
+      include includes/post/post-copyright.pug
+      .tag_share
+        if (page.tags.length > 0 && theme.post_meta.post.tags)
+          .post-meta__tag-list
+            each item, index in page.tags.data
+              a(href=url_for(item.path)).post-meta__tags #[=item.name]
+        include includes/third-party/share/index.pug
+
+      if theme.reward.enable && theme.reward.QR_code
+        !=partial('includes/post/reward', {}, {cache: true})
+
+      //- ad
+      if theme.ad && theme.ad.post
+        .ads-wrap!=theme.ad.post
+
+      if theme.related_post && theme.related_post.enable
+        != related_posts(page,site.posts)
+
+      if page.comments !== false && theme.comments.use
+        - var commentsJsLoad = true
+        !=partial('includes/third-party/comments/index', {}, {cache: true})
+
+    aside.gf-post-side
+      .gf-post-side-card.gf-post-author-card
+        img.gf-post-author-avatar(src=url_for(theme.avatar.img) alt=config.author)
+        h3.gf-post-author-name= config.author
+        p.gf-post-author-desc= (config.subtitle || '记录与分享，步履不停。')
+      .gf-post-side-card.gf-post-switch-card
+        if page.prev
+          a.gf-post-prev(href=url_for(page.prev.path))
+            span.gf-post-switch-label 上一篇
+            span.gf-post-switch-title= page.prev.title
+        else
+          span.gf-post-prev.gf-post-switch-disabled
+            span.gf-post-switch-label 上一篇
+            span.gf-post-switch-title 没有了
+        if page.next
+          a.gf-post-next(href=url_for(page.next.path))
+            span.gf-post-switch-label 下一篇
+            span.gf-post-switch-title= page.next.title
+        else
+          span.gf-post-next.gf-post-switch-disabled
+            span.gf-post-switch-label 下一篇
+            span.gf-post-switch-title 没有了
+      .gf-post-side-card.gf-post-toc-card
+        button.gf-post-toc-toggle(type="button" aria-expanded="true")
+          span 文章目录
+          i.gf-post-toc-arrow
+        .gf-post-toc-body
+          if theme.toc.post
+            != toc(page.content, {list_number: theme.toc.number, min_depth: 1, max_depth: 3})
+          else
+            p.gf-post-toc-empty 暂无目录

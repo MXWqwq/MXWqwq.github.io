@@ -1,0 +1,55 @@
+extends includes/layout.pug
+
+block content
+  - const gfFriends = (site.data.links && site.data.links.friends) || []
+  - const gfWorks = (site.data.links && site.data.links.works) || []
+  - const gfFirst = function (s) { return String(s || '?').charAt(0).toUpperCase() }
+  mixin gfLinksCard(it)
+    a.gf-links-card(href=it.url target='_blank' rel='noopener' title=it.description style='--link-color:' + (it.color || '#5aa9b5'))
+      if it.image
+        span.gf-links-avatar(style='background:' + (it.color || '#5aa9b5'))
+          img.gf-links-avatar-img(src=it.image alt=it.site loading='lazy')
+      else
+        span.gf-links-avatar(style='background:' + (it.color || '#5aa9b5'))= gfFirst(it.site)
+      .gf-links-card-body
+        span.gf-links-site= it.site
+        span.gf-links-owner= it.owner
+        span.gf-links-desc= it.description
+  #gf-links
+    section.gf-links-block
+      .gf-hana-head
+        span.gf-hana-head-ico
+          i.fas.fa-user-group.fa-fw
+        h2.gf-hana-head-title 友情链接
+      .gf-links-grid
+        each f in gfFriends
+          +gfLinksCard(f)
+    section.gf-links-block
+      .gf-hana-head
+        span.gf-hana-head-ico
+          i.fas.fa-link.fa-fw
+        h2.gf-hana-head-title 自己写的一些作品
+      .gf-links-grid
+        each w in gfWorks
+          +gfLinksCard(w)
+    section.gf-links-block.gf-links-friend
+      .gf-hana-head
+        span.gf-hana-head-ico
+          i.fas.fa-message.fa-fw
+        h2.gf-hana-head-title 来做朋友吧
+      .gf-links-markdown
+        != page.content
+    section.gf-links-block.gf-links-comments
+      .gf-hana-head
+        span.gf-hana-head-ico
+          i.fas.fa-comments.fa-fw
+        h2.gf-hana-head-title 评论区
+      .gf-links-comment-card
+        .gf-links-comment-empty(role='status' aria-live='polite')
+          i.far.fa-comment-dots(aria-hidden='true')
+          span 暂无评论
+        .gf-links-comment-compose
+          textarea.gf-links-comment-input(rows='3' disabled placeholder='评论功能暂未开放，后续会支持留言。' aria-label='评论框（暂未开放）')
+          .gf-links-comment-actions
+            span.gf-links-comment-note 评论功能开发中
+            button.gf-links-comment-send(type='button' disabled) 发送
