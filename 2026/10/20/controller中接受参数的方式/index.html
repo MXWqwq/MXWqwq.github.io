@@ -1,0 +1,264 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Controller中接受参数的方式 | The past</title><meta name="author" content="John Doe"><meta name="copyright" content="John Doe"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="主要介绍SpringMVC中Controller的接参方式">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Controller中接受参数的方式">
+<meta property="og:url" content="https://mxwqwq.github.io/2026/10/20/controller%E4%B8%AD%E6%8E%A5%E5%8F%97%E5%8F%82%E6%95%B0%E7%9A%84%E6%96%B9%E5%BC%8F/index.html">
+<meta property="og:site_name" content="The past">
+<meta property="og:description" content="主要介绍SpringMVC中Controller的接参方式">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mxwqwq.github.io/img/butterfly-icon.png">
+<meta property="article:published_time" content="2026-10-20T06:45:15.000Z">
+<meta property="article:modified_time" content="2026-10-20T06:45:22.325Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mxwqwq.github.io/img/butterfly-icon.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Controller中接受参数的方式",
+  "url": "https://mxwqwq.github.io/2026/10/20/controller%E4%B8%AD%E6%8E%A5%E5%8F%97%E5%8F%82%E6%95%B0%E7%9A%84%E6%96%B9%E5%BC%8F/",
+  "image": "https://mxwqwq.github.io/img/butterfly-icon.png",
+  "datePublished": "2026-10-20T06:45:15.000Z",
+  "dateModified": "2026-10-20T06:45:22.325Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "John Doe",
+      "url": "https://mxwqwq.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.ico"><link rel="canonical" href="https://mxwqwq.github.io/2026/10/20/controller%E4%B8%AD%E6%8E%A5%E5%8F%97%E5%8F%82%E6%95%B0%E7%9A%84%E6%96%B9%E5%BC%8F/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.7.1.260811"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.3.1/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        try {
+          const data = { value }
+
+          if (ttl != null) {
+            data.expiry = Date.now() + ttl * 86400000
+          }
+
+          localStorage.setItem(key, JSON.stringify(data))
+        } catch (e) {
+          console.error(e)
+        }
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Controller中接受参数的方式',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'post'
+}</script><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=JetBrains+Mono:wght@400&display=swap"><link rel="stylesheet" href="/css/custom.css?v=20261020k"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="gf-entry-loading" role="status" aria-live="polite" aria-label="页面加载中"><svg class="gf-entry-umbrella" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="rotate(-22 60 60)"><path d="M14 56 C19 31 38 15 62 14 C87 14 105 30 111 55 C103 49 97 49 90 56 C83 49 75 49 66 56 C57 49 49 49 41 56 C33 49 24 49 14 56 Z"></path><path d="M62 14 C38 28 32 43 14 56"></path><path d="M62 14 C49 28 43 43 41 56"></path><path d="M62 14 C61 28 64 43 66 56"></path><path d="M62 14 C78 28 86 43 90 56"></path><path d="M62 14 C94 29 103 43 111 55"></path><path d="M62 14 L64 94 C65 108 45 110 45 98"></path></g></svg><span class="gf-entry-loading-text">页面加载中</span></div><noscript><style>#gf-entry-loading { display: none !important; }</style></noscript><script>(() => {
+  const overlay = document.getElementById('gf-entry-loading')
+  if (!overlay) return
+
+  const started = performance.now()
+  const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const minimum = reducedMotion ? 0 : 550
+  let dismissed = false
+  document.documentElement.classList.add('gf-entry-loading')
+
+  const dismiss = () => {
+    if (dismissed) return
+    dismissed = true
+    const remaining = Math.max(0, minimum - (performance.now() - started))
+    window.setTimeout(() => {
+      document.documentElement.classList.remove('gf-entry-loading')
+      overlay.setAttribute('aria-hidden', 'true')
+      overlay.classList.add('is-dismissing')
+      if (reducedMotion) {
+        overlay.remove()
+        return
+      }
+      const remove = () => overlay.remove()
+      overlay.addEventListener('transitionend', remove, { once: true })
+      window.setTimeout(remove, 1000)
+    }, remaining)
+  }
+
+  if (document.readyState === 'complete') dismiss()
+  else window.addEventListener('load', dismiss, { once: true })
+  window.setTimeout(dismiss, 6000)
+})()
+</script><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"></header><nav id="nav"><span id="blog-info"><span class="nav-site-title"><span class="site-name">The past</span></span><a class="nav-page-title" href="/"><span class="site-name">Controller中接受参数的方式</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><a class="menus_item" href="/" data-path="/"><i class="fas fa-house fa-fw"></i><span>主页</span></a><a class="menus_item active" href="/articles/" data-path="/articles/"><i class="fas fa-file-pen fa-fw"></i><span>文章</span></a><a class="menus_item" href="/tags/" data-path="/tags/"><i class="fas fa-clock fa-fw"></i><span>动态</span></a><a class="menus_item" href="/about/" data-path="/about/"><i class="fas fa-circle-info fa-fw"></i><span>关于</span></a><a class="menus_item" href="/links/" data-path="/links/"><i class="fas fa-link fa-fw"></i><span>一些链接</span></a></div></div><div id="nav-right-icons"><div class="nav-icon-btn" id="nav-search-btn" role="button" tabindex="0" aria-label="搜索"><svg class="gf-nav-search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div><div class="nav-icon-btn" id="nav-theme-btn"><i class="fas fa-sun fa-fw"></i><div class="gf-theme-pop"><div class="gf-theme-option" data-gf-theme="light"><span class="gf-theme-ico">☀</span><span class="gf-theme-text">light</span></div><div class="gf-theme-option" data-gf-theme="dark"><span class="gf-theme-ico">☾</span><span class="gf-theme-text">dark</span></div></div></div><span class="nav-icon-btn" id="nav-user-btn" role="img" aria-label="用户功能暂不可用"><i class="fas fa-user fa-fw" aria-hidden="true"></i></span></div><button id="toggle-menu" type="button" aria-label="打开导航菜单" aria-expanded="false"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></button></nav><main class="layout hide-aside" id="content-inner"><div class="gf-post-page" id="post"><div class="gf-post-main"><nav class="gf-post-breadcrumb" aria-label="面包屑"><a class="gf-bc-link" href="/articles/">文章</a><span class="gf-bc-sep" aria-hidden="true">&gt;</span><a class="gf-bc-current" href="#gf-post-title" aria-current="location" title="Controller中接受参数的方式"><span class="gf-bc-current-title">Controller中接受参数的方式</span></a></nav><header class="gf-post-head"><h1 class="gf-post-title" id="gf-post-title">Controller中接受参数的方式</h1><p class="gf-post-intro">主要介绍SpringMVC中Controller的接参方式</p><div class="gf-post-head-meta"><time class="gf-post-head-date" datetime="2026-10-20T06:45:15.000Z">2026-10-20</time><span class="gf-post-head-sep">|</span><span class="gf-post-head-words"><span>424</span>字</span></div></header><article class="container post-content gf-post-body" id="article-container"><h1 id="六种"><a href="#六种" class="headerlink" title="六种"></a>六种</h1><p>Spring MVC中Controller接收参数常用方式包括@PathVariable、@RequestParam、无注解传参、HttpServletRequest、@RequestBody和@RequestHeader<strong>六种</strong>，分别适用于URL路径、查询参数、请求体及请求头等不同场景。</p>
+<h4 id="1-PathVariable接收参数"><a href="#1-PathVariable接收参数" class="headerlink" title="1 @PathVariable接收参数"></a>1 @PathVariable接收参数</h4><p>请求方式：localhost:7001&#x2F;param&#x2F;123</p>
+<p>代码示例：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">@<span class="title class_">GetMapping</span>(<span class="string">&quot;&#123;id&#125;&quot;</span>)</span><br><span class="line">public <span class="title class_">String</span> <span class="title function_">getPathVariable</span>(<span class="params">@PathVariable <span class="built_in">String</span> id</span>)&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;id=&quot;</span>+id;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-RequestParam接收参数"><a href="#2-RequestParam接收参数" class="headerlink" title="2 @RequestParam接收参数"></a>2 @RequestParam接收参数</h4><p>使用这个注解需要注意两个点，一是加了这个参数后则请求中必须传递这个参数，二是@RequestParam这个注解可以指定名字，请求参数必须和指定的这个名字相同，如果不指定，则默认为具体参数名。</p>
+<p>请求方式：localhost:7001&#x2F;param&#x2F;getParam?myId&#x3D;18</p>
+<p>代码示例：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">@<span class="title class_">GetMapping</span>(<span class="string">&quot;getParam&quot;</span>)</span><br><span class="line">public <span class="title class_">String</span> <span class="title function_">getRequestParam</span>(<span class="params">@RequestParam(<span class="string">&quot;myId&quot;</span>) <span class="built_in">String</span> id</span>)&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;id=&quot;</span>+id;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-无注解传参"><a href="#3-无注解传参" class="headerlink" title="3 无注解传参"></a>3 无注解传参</h4><p>这种方式和2对比，最大的区别就是这个参数不是必传的，请求路径上可以不传递。</p>
+<p>请求方式：localhost:7001&#x2F;param&#x2F;getString?id&#x3D;18</p>
+<p>代码示例：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">@<span class="title class_">GetMapping</span>(<span class="string">&quot;getString&quot;</span>)</span><br><span class="line">public <span class="title class_">String</span> <span class="title function_">getString</span>(<span class="params"><span class="built_in">String</span> id</span>)&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;id=&quot;</span>+id;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-HttpServletRequest接收参数"><a href="#4-HttpServletRequest接收参数" class="headerlink" title="4 HttpServletRequest接收参数"></a>4 HttpServletRequest接收参数</h4><p>请求方式：localhost:7001&#x2F;param&#x2F;getRequest?id&#x3D;18</p>
+<p>代码示例：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">@<span class="title class_">GetMapping</span>(<span class="string">&quot;getRequest&quot;</span>)</span><br><span class="line">public <span class="title class_">String</span> <span class="title function_">getRequest</span>(<span class="params">HttpServletRequest request</span>)&#123;</span><br><span class="line">    <span class="title class_">String</span> id = request.<span class="title function_">getParameter</span>(<span class="string">&quot;id&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;id=&quot;</span>+id;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="5-RequestBody接收请求体参数"><a href="#5-RequestBody接收请求体参数" class="headerlink" title="5 @RequestBody接收请求体参数"></a>5 @RequestBody接收请求体参数</h4><p>这种方式一般用来传递实体对象，加了这个注解后，参数也是必传的。</p>
+<p>请求方式：{“id”:18}</p>
+<p>代码示例：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">@<span class="title class_">PostMapping</span>(<span class="string">&quot;getBody&quot;</span>)</span><br><span class="line">public <span class="title class_">String</span> <span class="title function_">getBody</span>(<span class="params">@RequestBody <span class="built_in">String</span> id</span>)&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;id=&quot;</span>+id;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="6-RequestHeader接收请求头参数"><a href="#6-RequestHeader接收请求头参数" class="headerlink" title="6 @RequestHeader接收请求头参数"></a>6 @RequestHeader接收请求头参数</h4><p>代码示例：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">@<span class="title class_">PostMapping</span>(<span class="string">&quot;getHeader&quot;</span>)</span><br><span class="line">public <span class="title class_">String</span> <span class="title function_">getHeader</span>(<span class="params">@RequestHeader <span class="built_in">String</span> id</span>)&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;id=&quot;</span>+id;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></article><div class="tag_share"><div class="post-share"><div class="social-share" data-image="/img/butterfly-icon.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div></div><aside class="gf-post-side"><div class="gf-post-side-card gf-post-author-card"><img class="gf-post-author-avatar" src="/img/avatar.jpg" alt="墨晓文"><h3 class="gf-post-author-name">墨晓文</h3><p class="gf-post-author-desc">也许只有你不懂得回忆的价值...</p></div><div class="gf-post-side-card gf-post-switch-card"><span class="gf-post-prev gf-post-switch-disabled"><span class="gf-post-switch-label">上一篇</span><span class="gf-post-switch-title">没有了</span></span><span class="gf-post-next gf-post-switch-disabled"><span class="gf-post-switch-label">下一篇</span><span class="gf-post-switch-title">没有了</span></span></div><div class="gf-post-side-card gf-post-toc-card"><button class="gf-post-toc-toggle" type="button" aria-expanded="true"><span>文章目录</span><i class="gf-post-toc-arrow"></i></button><div class="gf-post-toc-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%AD%E7%A7%8D"><span class="toc-number">1.</span> <span class="toc-text">六种</span></a></li></ol></div></div></aside></div></main><footer id="footer"><div class="gf-footer-wrap"><div class="gf-footer-row gf-footer-nav"><span class="gf-footer-label">导航</span><span class="gf-footer-arrow">›</span><a class="gf-footer-link" href="/articles/" data-path="/articles/">文章</a><span class="gf-footer-sep">|</span><a class="gf-footer-link" href="/tags/" data-path="/tags/">动态</a><span class="gf-footer-sep">|</span><a class="gf-footer-link" href="/about/" data-path="/about/">关于</a><span class="gf-footer-sep">|</span><a class="gf-footer-link" href="/links/" data-path="/links/">友链</a></div><div class="gf-footer-row gf-footer-contact"><span class="gf-footer-label">联系我</span><span class="gf-footer-arrow">›</span><a class="gf-sns-chip" href="https://github.com/MXWqwq" target="_blank" rel="noopener" data-tip="GitHub" style="--sns-color:#3d3d3d"><i class="fa-fw fa-brands fa-github"></i><span>GitHub</span></a><a class="gf-sns-chip" href="https://qm.qq.com/q/A8AhaoFYNU" target="_blank" rel="noopener" data-tip="QQ" style="--sns-color:#0099FF"><i class="fa-fw fa-brands fa-qq"></i><span>QQ</span></a><a class="gf-sns-chip" href="https://space.bilibili.com/339823308?spm_id_from=333.1387.0.0" target="_blank" rel="noopener" data-tip="BiliBili" style="--sns-color:#FB7299"><i class="fa-fw fa-brands fa-bilibili"></i><span>BiliBili</span></a><a class="gf-sns-chip" href="https://music.163.com/#/user/home?id=1463708606" target="_blank" rel="noopener" data-tip="网易云" style="--sns-color:#C20C0C"><svg class="gf-sns-svg" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true"><path d="M13.046 9.388a3.919 3.919 0 0 0-.66.19c-.809.312-1.447.991-1.666 1.775a2.269 2.269 0 0 0-.074.81c.048.546.333 1.05.764 1.35a1.483 1.483 0 0 0 2.01-.286c.406-.531.355-1.183.24-1.636-.098-.387-.22-.816-.345-1.249a64.76 64.76 0 0 1-.269-.954zm-.82 10.07c-3.984 0-7.224-3.24-7.224-7.223 0-.98.226-3.02 1.884-4.822A7.188 7.188 0 0 1 9.502 5.6a.792.792 0 1 1 .587 1.472 5.619 5.619 0 0 0-2.795 2.462 5.538 5.538 0 0 0-.707 2.7 5.645 5.645 0 0 0 5.638 5.638c1.844 0 3.627-.953 4.542-2.428 1.042-1.68.772-3.931-.627-5.238a3.299 3.299 0 0 0-1.437-.777c.172.589.334 1.18.494 1.772.284 1.12.1 2.181-.519 2.989-.39.51-.956.888-1.592 1.064a3.038 3.038 0 0 1-2.58-.44 3.45 3.45 0 0 1-1.44-2.514c-.04-.467.002-.93.128-1.376.35-1.256 1.356-2.339 2.622-2.826a5.5 5.5 0 0 1 .823-.246l-.134-.505c-.37-1.371.25-2.579 1.547-3.007.329-.109.68-.145 1.025-.105.792.09 1.476.592 1.709 1.023.258.507-.096 1.153-.706 1.153a.788.788 0 0 1-.54-.213c-.088-.08-.163-.174-.259-.247a.825.825 0 0 0-.632-.166.807.807 0 0 0-.634.551c-.056.191-.031.406.02.595.07.256.159.597.217.82 1.11.098 2.162.54 2.97 1.296 1.974 1.844 2.35 4.886.892 7.233-1.197 1.93-3.509 3.177-5.889 3.177zM0 12c0 6.627 5.373 12 12 12s12-5.373 12-12S18.627 0 12 0 0 5.373 0 12Z"></path></svg><span>网易云</span></a></div><div class="gf-footer-row gf-footer-quote"><span>失去"未来"的双翼，沦为"过去"的奴隶</span></div><div class="gf-footer-row gf-footer-legal"><span>Copyright © 2025 - 2026 The past</span><span class="gf-footer-sep">|</span><span>Powered by </span><a class="gf-footer-powered" href="https://github.com/MXWqwq/MXWqwq.github.io" target="_blank" rel="noopener">The past</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="gf-music-btn" type="button" title="音乐播放器"><i class="fas fa-music gf-music-icon"></i><span class="gf-eq" aria-hidden="true"><span></span><span></span><span></span></span></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div id="gf-music-panel" aria-hidden="true"><div class="gf-music-head"><img class="gf-music-cover" src="/img/thanks-cherry-pie.jpg" alt="cover"><div class="gf-music-meta"><p class="gf-music-title">Thanks</p><p class="gf-music-artist">Cherry pie</p></div></div><div class="gf-music-times"><span class="gf-music-cur">0:00</span><span class="gf-music-total">0:00</span></div><div class="gf-music-progress"><input class="gf-music-progress-bar" type="range" min="0" max="100" step="0.1" value="0" aria-label="播放进度"></div><div class="gf-music-controls"><button class="gf-music-btn gf-music-rewind" type="button" title="倒退10秒"><i class="fas fa-backward-step"></i></button><button class="gf-music-btn gf-music-toggle" type="button" title="播放/暂停"><i class="fas fa-play"></i></button><button class="gf-music-btn gf-music-forward" type="button" title="快进10秒"><i class="fas fa-forward-step"></i></button><div class="gf-music-volume-wrap"><button class="gf-music-vol-btn" type="button" title="音量"><i class="fas fa-volume-high"></i></button><div class="gf-music-vol-pop"><input class="gf-music-vol" type="range" min="0" max="100" value="50" aria-label="音量"></div></div></div></div><audio id="gf-music-audio" preload="auto" src="/music/thanks.mp3"></audio><script type="application/json" id="gf-search-posts">[{"title":"Controller中接受参数的方式","path":"/2026/10/20/controller%E4%B8%AD%E6%8E%A5%E5%8F%97%E5%8F%82%E6%95%B0%E7%9A%84%E6%96%B9%E5%BC%8F/","date":"2026-10-20","tags":[],"categories":[],"desc":"主要介绍SpringMVC中Controller的接参方式","body":"六种 Spring MVC中Controller接收参数常用方式包括@PathVariable、@RequestParam、无注解传参、HttpServletRequest、@RequestBody和@RequestHeader 六种 ，分别适用于URL路径、查询参数、请求体及请求头等不同场景。 1 @PathVariable接收参数 请求方式：localhost:7001&#x2F;param&#x2F;123 代码示例： 1 2 3 4 @ GetMapping ( \"&#123;id&#125;\" ) public String getPathVariable ( @PathVariable String id )&#123; return \"id=\" +id; &#125; 2 @RequestParam接收参数 使用这个注解需要注意两个点，一是加了这个参数后则请求中必须传递这个参数，二是@RequestParam这个注解可以指定名字，请求参数必须和指定的这个名字相同，如果不指定，则默认为具体参数名。 请求方式：localhost:7001&#x2F;param&#x2F;getParam?myId&#x3D;18 代码示例： 1 2 3 4 @ GetMapping ( \"getParam\" ) public String getRequestParam ( @RequestParam( \"myId\" ) String id )&#123; return \"id=\" +id; &#125; 3 无注解传参 这种方式和2对比，最大的区别就是这个参数不是必传的，请求路径上可以不传递。 请求方式：localhost:7001&#x2F;param&#x2F;getString?id&#x3D;18 代码示例： 1 2 3 4 @ GetMapping ( \"getString\" ) public String getString ( String id )&#123; return \"id=\" +id; &#125; 4 HttpServletRequest接收参数 请求方式：localhost:7001&#x2F;param&#x2F;getRequest?id&#x3D;18 代码示例： 1 2 3 4 5 @ GetMapping ( \"getRequest\" ) public String getRequest ( HttpServletRequest request )&#123; String id = request. getParameter ( \"id\" ); return \"id=\" +id; &#125; 5 @RequestBody接收请求体参数 这种方式一般用来传递实体对象，加了这个注解后，参数也是必传的。 请求方式：{“id”:18} 代码示例： 1 2 3 4 @ PostMapping ( \"getBody\" ) public String getBody ( @RequestBody String id )&#123; return \"id=\" +id; &#125; 6 @RequestHeader接收请求头参数 代码示例： 1 2 3 4 5 @ PostMapping ( \"getHeader\" ) public String getHeader ( @RequestHeader String id )&#123; return \"id=\" +id; &#125; &#125;"}]</script><div class="gf-search-modal" id="gf-search-modal" aria-hidden="true"><div class="gf-search-mask"></div><div class="gf-search-panel" role="dialog" aria-modal="true" aria-label="搜索"><div class="gf-search-input-wrap"><span class="gf-search-input-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span><input id="gf-search-input" type="text" placeholder="搜索文章…" autocomplete="off"><button class="gf-search-close" id="gf-search-close" type="button" aria-label="关闭"><i class="fas fa-times fa-fw"></i></button></div><div class="gf-search-body" id="gf-search-body"></div></div></div><div><script src="/js/utils.js?v=5.7.1.260811"></script><script src="/js/main.js?v=5.7.1.260811"></script><div class="js-pjax"></div><script src="/js/custom.js?v=20261020e" defer></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

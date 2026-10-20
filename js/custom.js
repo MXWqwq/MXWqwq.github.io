@@ -1,52 +1,295 @@
-/* Grey Flowers: 为代码块注入语言标签标题条 */
+/* 友链交换示例：复制当前代码块内容 */
 (function () {
-  function injectCodeLang() {
-    document.querySelectorAll('#article-container .highlight').forEach(function (el) {
-      if (el.querySelector('.gf-code-lang')) return
-      var m = (el.className || '').match(/highlight-([a-z0-9]+)/)
-      var lang = m ? m[1] : 'code'
-      var tag = document.createElement('span')
-      tag.className = 'gf-code-lang'
-      tag.textContent = lang
-      var tools = el.querySelector('.highlight-tools') || el.querySelector('figcaption')
-      if (tools) {
-        tools.appendChild(tag)
-      } else {
-        var cap = document.createElement('div')
-        cap.className = 'gf-code-lang'
-        cap.textContent = lang
-        el.insertBefore(cap, el.firstChild)
-      }
-    })
+  function fallbackCopy(text) {
+    var input = document.createElement('textarea')
+    input.value = text
+    input.setAttribute('readonly', '')
+    input.style.position = 'fixed'
+    input.style.opacity = '0'
+    document.body.appendChild(input)
+    input.select()
+    var copied = false
+    try { copied = document.execCommand('copy') } catch (e) { copied = false }
+    input.remove()
+    return copied
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', injectCodeLang)
-  } else {
-    injectCodeLang()
-  }
+  document.addEventListener('click', function (event) {
+    var button = event.target.closest && event.target.closest('.gf-links-copy')
+    if (!button || button.disabled) return
+    var code = button.closest('.gf-links-copy-block')
+    code = code && code.querySelector('pre code')
+    if (!code) return
 
-  // 伪 SPA 内容替换后复用：重新注入代码块语言标签
-  window.__gfCodeLangInject = injectCodeLang
+    var text = code.textContent || ''
+    var label = button.querySelector('.gf-links-copy-label')
+    var timer = button._gfLinksCopyTimer
+    if (timer) window.clearTimeout(timer)
+
+    function showResult(success) {
+      button.classList.toggle('is-copied', success)
+      if (label) label.textContent = success ? '已复制' : '复制失败'
+      button._gfLinksCopyTimer = window.setTimeout(function () {
+        button.classList.remove('is-copied')
+        if (label) label.textContent = '复制'
+      }, 1600)
+    }
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(function () {
+        showResult(true)
+      }).catch(function () {
+        showResult(fallbackCopy(text))
+      })
+    } else {
+      showResult(fallbackCopy(text))
+    }
+  })
 })();
 
-/* 导航栏右侧图标按钮绑定 */
+/* Mobile nav fallback: this blog disables Butterfly's sidebar menu, so expose
+   the same five routes in a compact dropdown on narrow screens. */
 (function () {
-  function bindNavIcons() {
-    var searchBtn = document.getElementById('nav-search-btn')
-    var originSearch = document.getElementById('search-button')
-    if (searchBtn && originSearch) {
-      searchBtn.addEventListener('click', function (e) {
-        e.preventDefault()
-        originSearch.click()
-      })
+  function closeMenu(nav) {
+    if (!nav) return
+    nav.classList.remove('gf-mobile-menu-open')
+    var toggle = nav.querySelector('#toggle-menu')
+    if (toggle) {
+      toggle.setAttribute('aria-expanded', 'false')
+      toggle.setAttribute('aria-label', '打开导航菜单')
     }
   }
 
+  document.addEventListener('click', function (event) {
+    var nav = event.target.closest && event.target.closest('#nav')
+    var toggle = event.target.closest && event.target.closest('#toggle-menu')
+    var activeNav = document.querySelector('#nav.gf-mobile-menu-open')
+
+    if (toggle && !document.getElementById('sidebar-menus')) {
+      event.preventDefault()
+      nav = toggle.closest('#nav')
+      if (!nav) return
+      var open = nav.classList.toggle('gf-mobile-menu-open')
+      toggle.setAttribute('aria-expanded', String(open))
+      toggle.setAttribute('aria-label', open ? '关闭导航菜单' : '打开导航菜单')
+      return
+    }
+
+    if (activeNav && (!nav || event.target.closest('a.menus_item'))) closeMenu(activeNav)
+  }, true)
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') closeMenu(document.querySelector('#nav.gf-mobile-menu-open'))
+  })
+})();
+
+/* ===== 全局搜索（Grey Flowers 风格）：右上角线性放大镜 → 居中搜索模态；实时模糊匹配文章标题/摘要/标签；命中词天蓝背景高亮；默认选中第一项，上下箭头切换，Enter 打开 ===== */
+(function () {
+  var posts = []
+  var timer = null
+  var cur = -1
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  }
+
+  function loadPosts() {
+    var el = document.getElementById('gf-search-posts')
+    if (!el) return
+    try {
+      posts = JSON.parse(el.textContent || '[]') || []
+    } catch (e) {
+      posts = []
+    }
+  }
+
+  function wordsOf(q) {
+    var s = (q || '').trim().toLowerCase()
+    return s ? s.split(/\s+/) : []
+  }
+
+  function matchPost(p, words) {
+    if (!words.length) return false
+    var hay = [p.title, p.desc, p.body, (p.tags || []).join(' '), (p.categories || []).join(' ')].join(' ').toLowerCase()
+    for (var i = 0; i < words.length; i++) {
+      if (hay.indexOf(words[i]) === -1) return false
+    }
+    return true
+  }
+
+  function hl(text, words) {
+    var t = esc(text)
+    if (!words.length) return t
+    var re = new RegExp('(' + words.map(function (w) {
+      return w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    }).join('|') + ')', 'gi')
+    var out = ''
+    var last = 0
+    var m
+    while ((m = re.exec(t)) !== null) {
+      out += t.slice(last, m.index) + '<span class="gf-search-hl">' + m[0] + '</span>'
+      last = m.index + m[0].length
+    }
+    out += t.slice(last)
+    return out
+  }
+
+  function resultHTML(p, words, idx) {
+    var tags = (p.tags || []).slice(0, 4)
+    var html = '<a class="gf-search-item' + (idx === cur ? ' gf-search-active' : '') + '" href="' + esc(p.path) + '">'
+    html += '<span class="gf-search-item-head"><span class="gf-search-item-title">' + hl(p.title, words) + '</span><time class="gf-search-item-date">' + esc(p.date) + '</time></span>'
+    if (p.desc) html += '<span class="gf-search-item-desc">' + hl(p.desc, words) + '</span>'
+    if (tags.length) {
+      html += '<span class="gf-search-item-tags">'
+      for (var i = 0; i < tags.length; i++) html += '<span class="gf-search-tag">' + esc(tags[i]) + '</span>'
+      html += '</span>'
+    }
+    html += '</a>'
+    return html
+  }
+
+  function bodyEl() { return document.getElementById('gf-search-body') }
+  function inputEl() { return document.getElementById('gf-search-input') }
+  function modalEl() { return document.getElementById('gf-search-modal') }
+
+  function scrollActiveIntoView() {
+    var act = bodyEl().querySelector('.gf-search-item.gf-search-active')
+    if (act) act.scrollIntoView({ block: 'nearest' })
+  }
+
+  function showSearchBody(box, html, revealResults) {
+    var from = Math.max(120, box.getBoundingClientRect().height)
+    box.style.height = from + 'px'
+    box.classList.remove('gf-search-results-in')
+    box.innerHTML = html
+    box.style.height = 'auto'
+    var natural = box.scrollHeight
+    box.style.height = from + 'px'
+    var panel = box.closest('.gf-search-panel')
+    var input = panel && panel.querySelector('.gf-search-input-wrap')
+    var available = Math.max(120, Math.floor(window.innerHeight * 0.7) - (input ? input.getBoundingClientRect().height : 64))
+    var to = Math.max(120, Math.min(natural, available))
+    void box.offsetHeight
+    box.style.height = to + 'px'
+    if (revealResults) box.classList.add('gf-search-results-in')
+  }
+
+  function render(q) {
+    var words = wordsOf(q)
+    cur = -1
+    var box = bodyEl()
+    if (!box) return
+    if (!words.length) {
+      showSearchBody(box, '<div class="gf-search-hint">输入标题、标签、分类或正文里的片段</div>', false)
+      return
+    }
+    var hits = []
+    for (var i = 0; i < posts.length; i++) {
+      if (matchPost(posts[i], words)) hits.push(posts[i])
+    }
+    if (!hits.length) {
+      showSearchBody(box, '<div class="gf-search-empty">暂无文章</div>', false)
+      return
+    }
+    cur = 0
+    var html = ''
+    for (var k = 0; k < hits.length; k++) html += resultHTML(hits[k], words, k)
+    showSearchBody(box, html, true)
+  }
+
+  function runSearch(q) {
+    var box = bodyEl()
+    if (!box) return
+    clearTimeout(timer)
+    if (!wordsOf(q).length) {
+      render('')
+      return
+    }
+    /* 加载态（图3）：先展示"搜索中..."，短暂延迟后渲染结果 */
+    showSearchBody(box, '<div class="gf-search-loading">搜索中...</div>', false)
+    timer = setTimeout(function () { render(q) }, 260)
+  }
+
+  function openModal() {
+    var modal = modalEl()
+    if (!modal) return
+    modal.classList.add('gf-search-open')
+    modal.setAttribute('aria-hidden', 'false')
+    var inp = inputEl()
+    if (inp) {
+      inp.value = ''
+      setTimeout(function () { inp.focus() }, 30)
+    }
+    runSearch('')
+  }
+
+  function closeModal() {
+    var modal = modalEl()
+    if (!modal) return
+    modal.classList.remove('gf-search-open')
+    modal.setAttribute('aria-hidden', 'true')
+    clearTimeout(timer)
+    var inp = inputEl()
+    if (inp) inp.value = ''
+    var box = bodyEl()
+    if (box) {
+      box.innerHTML = ''
+      box.style.height = '120px'
+      box.classList.remove('gf-search-results-in')
+    }
+    cur = -1
+  }
+
+  function move(delta) {
+    var items = bodyEl().querySelectorAll('.gf-search-item')
+    if (!items.length) return
+    cur = Math.max(0, Math.min(items.length - 1, cur + delta))
+    for (var i = 0; i < items.length; i++) {
+      items[i].classList.toggle('gf-search-active', i === cur)
+    }
+    scrollActiveIntoView()
+  }
+
+  function initSearch() {
+    var btn = document.getElementById('nav-search-btn')
+    var modal = modalEl()
+    if (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault()
+        if (modal && modal.classList.contains('gf-search-open')) closeModal()
+        else openModal()
+      })
+    }
+    if (!modal) return
+    var inp = inputEl()
+    if (inp) {
+      inp.addEventListener('input', function () {
+        runSearch(inp.value)
+      })
+    }
+    document.addEventListener('click', function (e) {
+      var t = e.target
+      if (!t || !t.closest) return
+      if (t.closest('.gf-search-mask') || t.closest('.gf-search-close')) { closeModal(); return }
+    })
+    document.addEventListener('keydown', function (e) {
+      if (!modal.classList.contains('gf-search-open')) return
+      if (e.key === 'Escape') { closeModal(); return }
+      if (e.key === 'ArrowDown') { e.preventDefault(); move(1); return }
+      if (e.key === 'ArrowUp') { e.preventDefault(); move(-1); return }
+      if (e.key === 'Enter') {
+        var act = bodyEl().querySelector('.gf-search-item.gf-search-active')
+        if (act) { e.preventDefault(); act.click() }
+      }
+    })
+    window.__gfSearchClose = closeModal
+  }
+
+  loadPosts()
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bindNavIcons)
+    document.addEventListener('DOMContentLoaded', initSearch)
   } else {
-    bindNavIcons()
+    initSearch()
   }
 })();
 
@@ -91,6 +334,7 @@
 /* 伪 SPA：遮罩局部刷新 + history 前进后退 + 菜单点击改写 */
 (function () {
   var overlay = null
+  var errorNoticeTimer = null
 
   function ensureOverlay() {
     if (!overlay) {
@@ -108,6 +352,22 @@
 
   function hideOverlay() {
     ensureOverlay().classList.remove('gf-spa-active')
+  }
+
+  function hideNavigationError() {
+    if (errorNoticeTimer) clearTimeout(errorNoticeTimer)
+    var notice = document.getElementById('gf-spa-error')
+    if (notice) notice.remove()
+  }
+
+  function showNavigationError() {
+    hideNavigationError()
+    var notice = document.createElement('div')
+    notice.id = 'gf-spa-error'
+    notice.setAttribute('role', 'alert')
+    notice.textContent = '页面暂时无法加载，请稍后重试。'
+    document.body.appendChild(notice)
+    errorNoticeTimer = setTimeout(hideNavigationError, 5000)
   }
 
   function normalize(p) {
@@ -158,15 +418,15 @@
     }
   }
 
-  /* SPA 替换后：重注入代码块语言标签 + 按新 URL 重激活菜单 + 三页（动态/关于/链接）初始化 + 主页（rail/相对时间）初始化 + 文章详情页（TOC/方格纸背景）初始化 */
+  /* SPA 替换后：按新 URL 重激活菜单 + 三页（动态/关于/链接）初始化 + 主页（rail/相对时间）初始化 + 文章详情页（TOC/方格纸背景）初始化 */
   function afterSwap() {
-    if (window.__gfCodeLangInject) window.__gfCodeLangInject()
     if (window.__gfNavMenuActivate) window.__gfNavMenuActivate()
     if (window.__gfGfPageInit) window.__gfGfPageInit()
     if (window.__gfHomeInit) window.__gfHomeInit()
     if (window.__gfRecentlyInit) window.__gfRecentlyInit()
     if (window.__gfPostInit) window.__gfPostInit()
     if (window.__gfPostBg) window.__gfPostBg()
+    if (window.__gfArticleArchivesInit) window.__gfArticleArchivesInit()
   }
 
   /* #scroll-down 点击：平滑滚动到内容区。
@@ -180,8 +440,8 @@
   }, true)
 
   /* minVisible：点击当前激活键重载当前页时，遮罩至少可见的毫秒数，保证有明确的刷新反馈 */
-  /* FETCH_TIMEOUT：服务器路由异常导致响应挂起时，超时后放弃局部刷新、整页跳转，避免遮罩永久卡死 */
-  var FETCH_TIMEOUT = 8000
+  /* FETCH_TIMEOUT：服务器路由异常时及时结束等待，恢复当前页面并提示重试 */
+  var FETCH_TIMEOUT = 6000
 
   /* 慢 fetch 兜底阈值：超过该时长仍未返回才显示轻量遮罩（无 spinner）；快速切换全程无遮罩 */
   var SLOW_FETCH_MS = 300
@@ -224,6 +484,109 @@
       })
     }
     setTimeout(finish, MAIN_FADE_TIMEOUT)
+  }
+
+  /* 文章模块内部切换只淡出右侧展示区，左侧目录导航保留原 DOM 和位置。 */
+  function waitForArticlePanelFade(panel, cb) {
+    var done = false
+    function finish() {
+      if (done) return
+      done = true
+      cb()
+    }
+    if (panel) {
+      panel.addEventListener('transitionend', function onEnd(ev) {
+        if (ev.target === panel && ev.propertyName === 'opacity') {
+          panel.removeEventListener('transitionend', onEnd)
+          finish()
+        }
+      })
+    }
+    setTimeout(finish, 300)
+  }
+
+  function isArticleModuleUrl(url) {
+    try {
+      var path = new URL(url, window.location.href).pathname
+      return path === '/articles' || path.indexOf('/articles/') === 0
+    } catch (e) {
+      return /^\/articles(?:\/|$)/.test(String(url || ''))
+    }
+  }
+
+  function navigateArticleModule(url, usePush) {
+    var mySeq = ++navSeq
+    hideNavigationError()
+    var currentPanel = document.querySelector('#article-module .gf-am-content')
+    if (currentPanel) currentPanel.classList.remove('gf-am-panel-fadeout', 'gf-am-panel-enter')
+
+    var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null
+    var timer = ctrl ? setTimeout(function () { ctrl.abort() }, FETCH_TIMEOUT) : null
+    fetch(url, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      credentials: 'same-origin',
+      signal: ctrl ? ctrl.signal : undefined
+    })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status)
+        return r.text()
+      })
+      .then(function (html) {
+        var doc = new DOMParser().parseFromString(html, 'text/html')
+        if (doc.querySelector('parsererror')) throw new Error('parse error')
+        if (mySeq !== navSeq) return
+
+        var nextModule = doc.querySelector('#article-module')
+        var nextPanel = nextModule && nextModule.querySelector('.gf-am-content')
+        if (!nextPanel) throw new Error('article module target missing')
+
+        var liveModule = document.querySelector('#article-module')
+        var livePanel = liveModule && liveModule.querySelector('.gf-am-content')
+        if (!liveModule || !livePanel) throw new Error('article module source missing')
+        livePanel.classList.add('gf-am-panel-fadeout')
+
+        waitForArticlePanelFade(livePanel, function () {
+          if (mySeq !== navSeq) return
+          var currentModule = document.querySelector('#article-module')
+          var currentContent = currentModule && currentModule.querySelector('.gf-am-content')
+          if (!currentContent) return
+
+          var replacement = nextPanel.cloneNode(true)
+          replacement.classList.remove('gf-am-panel-fadeout')
+          replacement.classList.add('gf-am-panel-enter')
+          currentContent.replaceWith(replacement)
+
+          var currentCrumb = currentModule.querySelector('.gf-am-breadcrumb')
+          var nextCrumb = nextModule.querySelector('.gf-am-breadcrumb')
+          if (currentCrumb && nextCrumb) currentCrumb.replaceWith(nextCrumb.cloneNode(true))
+
+          var currentNav = currentModule.querySelector('.gf-am-side')
+          var nextNav = nextModule.querySelector('.gf-am-side')
+          if (currentNav && nextNav) {
+            var currentLinks = currentNav.querySelectorAll('.gf-am-nav-item')
+            var nextLinks = nextNav.querySelectorAll('.gf-am-nav-item')
+            currentLinks.forEach(function (link, index) {
+              link.classList.toggle('active', !!(nextLinks[index] && nextLinks[index].classList.contains('active')))
+            })
+          }
+
+          syncTitle(doc)
+          if (usePush) history.pushState({}, '', url)
+          afterSwap()
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              if (mySeq === navSeq) replacement.classList.remove('gf-am-panel-enter')
+            })
+          })
+        })
+      })
+      .catch(function () {
+        if (mySeq !== navSeq) return
+        showNavigationError()
+      })
+      .finally(function () {
+        if (timer) clearTimeout(timer)
+      })
   }
 
   /* 等待当前 header 的 opacity 过渡结束（transitionend 优先，超时兜底） */
@@ -279,8 +642,14 @@
   }
 
   function navigateTo(url, usePush, minVisible) {
+    if (document.querySelector('#article-module') && isArticleModuleUrl(url)) {
+      navigateArticleModule(url, usePush)
+      return
+    }
+
     var t0 = Date.now()
     var mySeq = ++navSeq
+    hideNavigationError()
 
     /* 打断旧过渡：清理可能残留的 banner 过渡类（旧流程被新导航接管时其回调已放弃清理），
        避免 header 卡在透明/收起状态；随后立即启动旧 main 内容淡出（与 fetch 并行） */
@@ -290,7 +659,11 @@
       h0.classList.remove('gf-header-enter')
     }
     var m0 = document.querySelector('main#content-inner')
-    if (m0) m0.classList.add('gf-main-fadeout')
+    if (m0) {
+      var activeArticlePanel = m0.querySelector('.gf-am-content')
+      if (activeArticlePanel) activeArticlePanel.classList.remove('gf-am-panel-fadeout', 'gf-am-panel-enter')
+      m0.classList.add('gf-main-fadeout')
+    }
 
     /* 目标 A：加载快时完全不显示遮罩，仅保留旧淡出新淡入；仅当 fetch 超过
        SLOW_FETCH_MS 仍未返回时才显示轻量兜底遮罩（无 spinner） */
@@ -360,7 +733,9 @@
         /* 旧请求失败（如被 FETCH_TIMEOUT abort）：若已有更新的导航接管，静默放弃 */
         if (mySeq !== navSeq) return
         hideOverlay()
-        window.location.href = url
+        var currentMain = document.querySelector('main#content-inner')
+        if (currentMain) currentMain.classList.remove('gf-main-fadeout', 'gf-main-enter')
+        showNavigationError()
       })
       .finally(function () {
         if (timer) clearTimeout(timer)
@@ -368,10 +743,11 @@
       })
   }
 
-  /* 事件委托（捕获阶段，最先执行）：导航栏菜单、文章卡片、详情页上下篇点击走伪 SPA；当前页点击完全无反应 */
+  /* 事件委托（捕获阶段，最先执行）：导航栏菜单、文章卡片、搜索结果、标签、相关推荐和上下篇点击走伪 SPA；当前页点击完全无反应 */
   document.addEventListener('click', function (e) {
-    var a = e.target && e.target.closest ? e.target.closest('a.menus_item[data-path], a.gf-footer-link[data-path], a.gf-am-nav-item, a.gf-home-post-card, a.gf-article-card, a.gf-archive-card, a.gf-post-prev, a.gf-post-next, .gf-am-breadcrumb a, .gf-post-breadcrumb a, a.gf-hana-head-link') : null
+    var a = e.target && e.target.closest ? e.target.closest('a.menus_item[data-path], a.gf-footer-link[data-path], a.gf-am-nav-item, a.gf-home-post-card, a.gf-article-card, a.gf-archive-card, a.gf-search-item, a.gf-tag-chip, a.gf-post-tag, a.gf-cat-more, a.gf-cat-name, a.gf-cat-post-link, a.gf-post-prev, a.gf-post-next, a.gf-related-card, a.pagination-related, .gf-am-breadcrumb a, .gf-post-breadcrumb a, a.gf-hana-head-link') : null
     if (!a) return
+    if (window.__gfSearchClose) window.__gfSearchClose()
     var href = a.getAttribute('href') || '/'
     if (href.charAt(0) !== '/') return
     e.preventDefault()
@@ -492,15 +868,18 @@
 
 /* 文章模块归档页：年份/月份按钮切换过滤（document 级委托，伪 SPA 替换后同样生效） */
 (function () {
+  var curYear = null
+  var curMonth = null
+  var archiveClickListenerAdded = false
+
   function initArticleArchives() {
     var groups = document.querySelectorAll('.gf-archive-group')
     if (!groups.length) return
-    var years = document.querySelectorAll('.gf-archive-year')
-    var monthsAll = document.querySelectorAll('.gf-archive-months')
-    var curYear = null
-    var curMonth = null
 
     function apply(year, month) {
+      var years = document.querySelectorAll('.gf-archive-year')
+      var monthsAll = document.querySelectorAll('.gf-archive-months')
+      var liveGroups = document.querySelectorAll('.gf-archive-group')
       years.forEach(function (y) {
         y.classList.toggle('active', y.getAttribute('data-year') === year)
       })
@@ -511,7 +890,7 @@
           m.classList.toggle('active', isY && m.getAttribute('data-month') === month)
         })
       })
-      groups.forEach(function (g) {
+      liveGroups.forEach(function (g) {
         g.classList.toggle('show', g.getAttribute('data-year') === year && g.getAttribute('data-month') === month)
       })
     }
@@ -523,6 +902,9 @@
     curMonth = firstActiveMonth ? firstActiveMonth.getAttribute('data-month') : null
     if (curYear && curMonth) apply(curYear, curMonth)
 
+    if (archiveClickListenerAdded) return
+    archiveClickListenerAdded = true
+
     document.addEventListener('click', function (e) {
       var t = e.target
       if (!t || !t.closest) return
@@ -533,7 +915,7 @@
         curYear = y
         // 切年份后默认展示该年最新月份
         var mCont = null
-        monthsAll.forEach(function (c) {
+        document.querySelectorAll('.gf-archive-months').forEach(function (c) {
           if (c.getAttribute('data-year') === y) mCont = c
         })
         var firstM = mCont ? mCont.querySelector('.gf-archive-month') : null
@@ -641,6 +1023,41 @@
     })
   }
 
+  function updateActivityTextFade(root) {
+    if (!root || !root.querySelectorAll) return
+    var texts = root.querySelectorAll('.gf-home-act-card .gf-activity-text, .gf-tl-card .gf-tl-text')
+    Array.prototype.forEach.call(texts, function (el) {
+      el.classList.toggle('gf-text-overflow', el.scrollHeight > el.clientHeight + 1)
+    })
+    var imageGrids = root.querySelectorAll('.gf-home-act-card .gf-activity-images')
+    Array.prototype.forEach.call(imageGrids, function (grid) {
+      var photos = grid.querySelectorAll('.gf-activity-photo')
+      if (!photos.length) return
+      function updateImageOverflow() {
+        grid.classList.toggle('gf-image-overflow', grid.scrollHeight > grid.clientHeight + 1)
+      }
+      Array.prototype.forEach.call(photos, function (photo) {
+        if (photo.__gfImageFadeBound) return
+        photo.__gfImageFadeBound = true
+        photo.addEventListener('load', updateImageOverflow)
+      })
+      updateImageOverflow()
+    })
+  }
+  window.__gfActivityTextFade = updateActivityTextFade
+
+  var activityFadeResizeRaf = null
+  window.addEventListener('resize', function () {
+    if (activityFadeResizeRaf) return
+    activityFadeResizeRaf = requestAnimationFrame(function () {
+      activityFadeResizeRaf = null
+      updateActivityTextFade(document)
+    })
+  }, { passive: true })
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { updateActivityTextFade(document) })
+  }
+
   /* rail 指针拖拽滚动 + 惯性（鼠标按住拖动；触摸板双指横滑走浏览器原生 overflow-x） */
   function initRail(root) {
     var rails = root.querySelectorAll('.gf-home-rail')
@@ -656,6 +1073,68 @@
       var lastX = 0
       var lastT = 0
       var raf = null
+
+      /* 滚动推动晾绳和相片轻摆；仅写 CSS 变量，不改动卡片点击与分页逻辑。 */
+      var motionPreference = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)')
+      var motionRaf = null
+      var motionLastFrame = 0
+      var motionLastScroll = rail.scrollLeft
+      var ropeOffset = 0
+      var ropeVelocity = 0
+      var ropeTileWidth = 48
+      var lastRopePhase = ''
+
+      /* 纹理与滑动同步向反方向移动；每一格恰好循环一次，不产生无限增长的位置值。 */
+      function renderRailPhase() {
+        var phase = (-(Math.max(0, rail.scrollLeft) % ropeTileWidth)).toFixed(2) + 'px'
+        if (phase === lastRopePhase) return
+        lastRopePhase = phase
+        rail.style.setProperty('--gf-rope-phase', phase)
+      }
+
+      function renderRailMotion() {
+        rail.style.setProperty('--gf-rope-wave', ropeOffset.toFixed(2) + 'px')
+        rail.style.setProperty('--gf-card-sway', (ropeOffset * 0.125).toFixed(2) + 'deg')
+      }
+
+      function settleRailMotion() {
+        ropeOffset = 0
+        ropeVelocity = 0
+        motionLastFrame = 0
+        motionRaf = null
+        renderRailMotion()
+      }
+
+      function animateRailMotion(ts) {
+        motionRaf = null
+        renderRailPhase()
+        if (motionPreference && motionPreference.matches) {
+          settleRailMotion()
+          return
+        }
+        var dt = motionLastFrame ? Math.min((ts - motionLastFrame) / 16.67, 2) : 1
+        motionLastFrame = ts
+        ropeVelocity = (ropeVelocity - ropeOffset * 0.11 * dt) * Math.pow(0.78, dt)
+        ropeOffset = Math.max(-5, Math.min(5, ropeOffset + ropeVelocity * dt))
+        if (Math.abs(ropeOffset) < 0.02 && Math.abs(ropeVelocity) < 0.02) {
+          settleRailMotion()
+          return
+        }
+        renderRailMotion()
+        motionRaf = requestAnimationFrame(animateRailMotion)
+      }
+
+      rail.addEventListener('scroll', function () {
+        var delta = rail.scrollLeft - motionLastScroll
+        motionLastScroll = rail.scrollLeft
+        if (!delta) return
+        if (!(motionPreference && motionPreference.matches)) {
+          ropeVelocity = Math.max(-6, Math.min(6, ropeVelocity + Math.max(-3, Math.min(3, delta * 0.11))))
+        }
+        if (!motionRaf) motionRaf = requestAnimationFrame(animateRailMotion)
+      }, { passive: true })
+
+      renderRailPhase()
 
       /* 速度 EMA 平滑：抑制单帧抖动，松手时获得稳定末速度 */
       function updateVelocity(x, t) {
@@ -755,6 +1234,7 @@
     fillRelativeTimes(home)
     initRail(home)
     initLoadMore(home)
+    updateActivityTextFade(home)
   }
 
   /* ============ rail 分页加载（对标 Grey Flowers loadMoreObserver + LoaderCircle） ============ */
@@ -769,9 +1249,36 @@
       .replace(/'/g, '&#39;')
   }
 
+  function activityImageCount(act) {
+    var urls = Array.isArray(act && act.image_urls) ? act.image_urls : []
+    return Math.max(Number(act && act.images || 0), urls.length)
+  }
+
+  function activityImagesHTML(act) {
+    var urls = Array.isArray(act && act.image_urls) ? act.image_urls : []
+    var html = '<div class="gf-activity-images">'
+    if (urls.length) {
+      urls.forEach(function (url, index) {
+        html += '<img class="gf-activity-photo" src="' + escapeHtml(url) + '" alt="动态配图 ' + (index + 1) + '" loading="lazy">'
+      })
+    } else {
+      var count = Math.min(activityImageCount(act), 3)
+      for (var index = 0; index < count; index++) {
+        html += '<div class="gf-activity-ph gf-ph-' + (index % 3) + '"></div>'
+      }
+    }
+    return html + '</div>'
+  }
+
+  /* 首页与动态页各自初始化，详情和后续加载共用同一套图片判断与渲染。 */
+  window.__gfActivityMedia = {
+    imageCount: activityImageCount,
+    imagesHTML: activityImagesHTML
+  }
+
   /* 生成与 index.pug 模板完全一致的活动卡片 HTML */
-  function activityCardHTML(act, total, idx) {
-    var hasImgs = Number(act.images || 0) > 0
+  function activityCardHTML(act, idx) {
+    var hasImgs = activityImageCount(act) > 0
     var hasMusic = !!(act.music && act.music.title)
     var typeLabel = hasImgs ? '图片' : (hasMusic ? '音乐' : '随记')
     var typeIcon = hasImgs ? 'fa-image' : (hasMusic ? 'fa-music' : 'fa-comment-dots')
@@ -780,7 +1287,6 @@
     var datePart = date.length > 5 ? date.slice(5) : date
     var content = escapeHtml(act.content)
     var comment = Number(act.comment_count || 0)
-    var like = act.like_count !== undefined ? Number(act.like_count) : (total - idx) * 3 + 4
     var h = '<article class="gf-home-act-card ' + typeCls + '" data-gf-tl-idx="' + idx + '" data-gf-src="gf-home-activities" role="button" tabindex="0">'
     h += '<div class="gf-activity-top">'
     h += '<div class="gf-activity-ident">'
@@ -794,30 +1300,22 @@
     h += '<div class="gf-activity-body">'
     h += '<p class="gf-activity-text">' + content + '</p>'
     if (hasImgs) {
-      h += '<div class="gf-activity-images">'
-      var imgN = Math.min(Number(act.images), 3)
-      for (var k = 0; k < imgN; k++) {
-        h += '<div class="gf-activity-ph gf-ph-' + (k % 3) + '"></div>'
-      }
-      h += '</div>'
-      h += '<span class="gf-activity-badge"><i class="fas fa-images fa-fw"></i> ' + Number(act.images) + '</span>'
+      h += activityImagesHTML(act)
     } else if (hasMusic) {
       h += '<div class="gf-activity-music">'
-      h += '<span class="gf-activity-music-ico"><i class="fas fa-music fa-fw"></i></span>'
+      h += '<span class="gf-activity-music-ico' + (act.music.cover ? '' : ' gf-activity-music-placeholder') + '">'
+      h += act.music.cover ? '<img class="gf-activity-music-cover" src="' + escapeHtml(act.music.cover) + '" alt="' + escapeHtml(act.music.title) + ' 封面" loading="lazy">' : '<i class="fas fa-music fa-fw"></i>'
+      h += '</span>'
       h += '<div class="gf-activity-music-text">'
       h += '<p class="gf-activity-music-title">' + escapeHtml(act.music.title) + '</p>'
       h += '<p class="gf-activity-music-artist">' + escapeHtml(act.music.artist || '') + '</p>'
       h += '</div>'
-      h += '<span class="gf-activity-music-count">1 首歌</span>'
       h += '</div>'
-    } else {
-      h += '<div class="gf-activity-footnote"><i class="fas fa-feather fa-fw"></i><span>Something to remember</span></div>'
     }
     h += '<div class="gf-activity-meta">'
-    h += '<span class="gf-activity-meta-item gf-home-like"><i class="fas fa-heart fa-fw"></i> ' + like + ' 赞</span>'
     h += '<span class="gf-activity-meta-item"><i class="fas fa-comment-dots fa-fw"></i> ' + comment + ' 评论</span>'
     if (hasImgs) {
-      h += '<span class="gf-activity-meta-item"><i class="fas fa-image fa-fw"></i> ' + Number(act.images) + ' 张图</span>'
+      h += '<span class="gf-activity-meta-item"><i class="fas fa-image fa-fw"></i> ' + activityImageCount(act) + ' 张图</span>'
     }
     if (hasMusic) {
       h += '<span class="gf-activity-meta-item"><i class="fas fa-music fa-fw"></i> 1 首歌</span>'
@@ -874,11 +1372,12 @@
           var frag = document.createDocumentFragment()
           batch.forEach(function (act, bi) {
             var wrap = document.createElement('div')
-            wrap.innerHTML = activityCardHTML(act, all.length, start + bi).trim()
+            wrap.innerHTML = activityCardHTML(act, start + bi).trim()
             var node = wrap.firstChild
             if (node) frag.appendChild(node)
           })
           rail.insertBefore(frag, trigger)
+          updateActivityTextFade(rail)
           page++
           loading = false
           done = page * GF_HOME_PAGE_SIZE >= all.length
@@ -927,9 +1426,11 @@
     var links = Array.prototype.slice.call(page.querySelectorAll('.gf-post-toc-body a.toc-link'))
     links.forEach(function (l) {
       l.addEventListener('click', function (ev) {
-        var id = l.getAttribute('href')
-        if (!id || id.charAt(0) !== '#') return
-        var target = document.getElementById(id.slice(1))
+        var raw = l.getAttribute('href')
+        if (!raw || raw.charAt(0) !== '#') return
+        var id = decodeURIComponent(raw.slice(1))
+        var target = document.getElementById(id)
+        if (!target) target = page.querySelector('[id="' + id + '"]')
         if (target) {
           ev.preventDefault()
           var y = target.getBoundingClientRect().top + window.scrollY - 80
@@ -975,11 +1476,13 @@
 
 /* ============================================================
    Grey Flowers 动态页：时间线卡片滚动加载 + 滚动进度指示器
-   复刻 /recently：IntersectionObserver 分批追加 + 右下角圆形百分比回顶按钮
+   复刻 /recently：IntersectionObserver 分批追加 + 工具栏滚动百分比只读显示
    全局入口（window.__gfRecentlyInit），兼容伪 SPA DOM 重建
    ============================================================ */
 (function () {
   var GF_TL_PAGE_SIZE = 10
+  var activityImageCount = window.__gfActivityMedia.imageCount
+  var activityImagesHTML = window.__gfActivityMedia.imagesHTML
 
   function escapeHtml(s) {
     return String(s == null ? '' : s)
@@ -990,14 +1493,13 @@
       .replace(/'/g, '&#39;')
   }
 
-  /* 生成与 gf-recently.pug 完全一致的时间线卡片 HTML（idx 为全局序号，total 为总条数） */
-  function gfTlItemHTML(act, idx, total) {
-    var hasImgs = Number(act.images || 0) > 0
+  /* 生成与 gf-recently.pug 完全一致的时间线卡片 HTML（idx 为全局序号） */
+  function gfTlItemHTML(act, idx) {
+    var hasImgs = activityImageCount(act) > 0
     var hasMusic = !!(act.music && act.music.title)
     var content = escapeHtml(act.content)
-    var like = act.like_count !== undefined ? Number(act.like_count) : (total - idx) * 3 + 4
     var comment = Number(act.comment_count || 0)
-    var h = '<li class="gf-tl-item" data-gf-tl-idx="' + idx + '">'
+    var h = '<li class="gf-tl-item" data-gf-tl-idx="' + idx + '" title="查看动态详情" role="button" tabindex="0">'
     h += '<article class="gf-tl-card">'
     h += '<header class="gf-tl-head">'
     h += '<div class="gf-tl-ident">'
@@ -1006,42 +1508,27 @@
     h += '<span class="gf-tl-user">MXWqwq</span>'
     h += '<time class="gf-tl-time"><i class="far fa-clock fa-fw"></i> ' + escapeHtml(act.date) + '</time>'
     h += '</div></div>'
-    h += '<span class="gf-tl-share" title="分享"><i class="fas fa-external-link-alt fa-fw"></i></span>'
     h += '</header>'
     h += '<div class="gf-tl-body">'
     h += '<p class="gf-tl-text">' + content + '</p>'
     if (hasImgs) {
-      h += '<div class="gf-activity-images">'
-      var imgN = Math.min(Number(act.images), 3)
-      for (var k = 0; k < imgN; k++) {
-        h += '<div class="gf-activity-ph gf-ph-' + (k % 3) + '"></div>'
-      }
-      h += '</div>'
-      h += '<span class="gf-activity-badge"><i class="fas fa-images fa-fw"></i> ' + Number(act.images) + '</span>'
+      h += activityImagesHTML(act)
     } else if (hasMusic) {
       h += '<div class="gf-activity-music">'
-      h += '<span class="gf-activity-music-ico"><i class="fas fa-music fa-fw"></i></span>'
+      h += '<span class="gf-activity-music-ico' + (act.music.cover ? '' : ' gf-activity-music-placeholder') + '">'
+      h += act.music.cover ? '<img class="gf-activity-music-cover" src="' + escapeHtml(act.music.cover) + '" alt="' + escapeHtml(act.music.title) + ' 封面" loading="lazy">' : '<i class="fas fa-music fa-fw"></i>'
+      h += '</span>'
       h += '<div class="gf-activity-music-text">'
       h += '<p class="gf-activity-music-title">' + escapeHtml(act.music.title) + '</p>'
       h += '<p class="gf-activity-music-artist">' + escapeHtml(act.music.artist || '') + '</p>'
       h += '</div>'
-      h += '<span class="gf-activity-music-count">1 首歌</span>'
       h += '</div>'
-    } else {
-      h += '<div class="gf-activity-footnote"><i class="fas fa-feather fa-fw"></i><span>Something to remember</span></div>'
     }
     h += '</div>'
     h += '<footer class="gf-tl-meta">'
-    h += '<span class="gf-tl-meta-item gf-tl-like"><i class="fas fa-heart fa-fw"></i> ' + like + '</span>'
     h += '<span class="gf-tl-meta-item gf-tl-comment"><i class="far fa-comment-dots fa-fw"></i> ' + comment + '</span>'
     h += '</footer></article></li>'
     return h
-  }
-
-  function updateTlProgress(root, loaded, total) {
-    var num = root.querySelector('.gf-scroll-progress-num')
-    if (!num) return
-    num.textContent = (total ? Math.min(100, Math.ceil(loaded / total * 100)) : 0) + '%'
   }
 
   /* 时间线滚动加载：IntersectionObserver 观察末尾触发器，接近末尾自动追加下一批 10 条 */
@@ -1058,13 +1545,12 @@
     var list = root.querySelector('.gf-tl-list')
     var trigger = root.querySelector('.gf-tl-more')
     if (!list || !trigger || !all.length) return
+    if (window.__gfActivityTextFade) window.__gfActivityTextFade(root)
 
     var rendered = list.querySelectorAll('.gf-tl-item').length
     var loading = false
     var done = rendered >= all.length
     var io = null
-    updateTlProgress(root, rendered, all.length)
-
     function finish() {
       if (io) { io.disconnect(); io = null }
       trigger.classList.remove('gf-loading')
@@ -1091,14 +1577,14 @@
         var frag = document.createDocumentFragment()
         batch.forEach(function (act) {
           var wrap = document.createElement('div')
-          wrap.innerHTML = gfTlItemHTML(act, rendered, all.length).trim()
+          wrap.innerHTML = gfTlItemHTML(act, rendered).trim()
           var node = wrap.firstChild
           if (node) frag.appendChild(node)
           rendered++
         })
         list.appendChild(frag)
+        if (window.__gfActivityTextFade) window.__gfActivityTextFade(list)
         loading = false
-        updateTlProgress(root, rendered, all.length)
         done = rendered >= all.length
         if (done) finish()
       })
@@ -1111,38 +1597,44 @@
     io.observe(trigger)
   }
 
-  /* 滚动进度指示器（复刻 ScrollTop：滚动百分比 + hover 箭头 + 点击回顶） */
+  /* 动态页滚动进度只读显示；全局监听在 PJAX 往返时复用当前节点 */
   function initScrollProgress() {
-    var btn = document.querySelector('.gf-scroll-progress')
-    if (!btn || btn.__gfSpBound) return
-    btn.__gfSpBound = true
-    var num = btn.querySelector('.gf-scroll-progress-num')
     function update() {
+      var indicator = document.querySelector('.gf-scroll-progress')
+      if (!indicator) return
+      var num = indicator.querySelector('.gf-scroll-progress-num')
       if (!num) return
       var doc = document.documentElement
       var total = doc.scrollHeight - doc.clientHeight
-      if (total <= 0) { num.textContent = '0%'; return }
+      if (total <= 0) {
+        num.textContent = '0%'
+        indicator.setAttribute('aria-label', '当前页面滚动进度 0%')
+        indicator.setAttribute('title', '当前页面滚动进度 0%')
+        return
+      }
       var y = window.scrollY || doc.scrollTop || 0
-      num.textContent = Math.min(100, Math.ceil(y / total * 100)) + '%'
+      var percent = Math.min(100, Math.ceil(y / total * 100)) + '%'
+      num.textContent = percent
+      indicator.setAttribute('aria-label', '当前页面滚动进度 ' + percent)
+      indicator.setAttribute('title', '当前页面滚动进度 ' + percent)
     }
-    window.addEventListener('scroll', update, { passive: true })
-    window.addEventListener('resize', update, { passive: true })
+    if (!window.__gfScrollProgressBound) {
+      window.__gfScrollProgressBound = true
+      window.addEventListener('scroll', update, { passive: true })
+      window.addEventListener('resize', update, { passive: true })
+    }
     update()
-    btn.addEventListener('click', function () {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    })
   }
 
   /* ============ 动态详情弹窗（复刻 Grey Flowers DetailDialog / HanaDialog） ============
      点击时间线卡片打开居中模态：深灰磨砂遮罩 + 白卡 + 右上角 × + 标题"动态详情"；
-     内容 = 头像/用户名/时间 + 正文 + 图片/音乐 + 点赞评论 meta + 底部评论输入框（"评论 N"）；
+     内容 = 头像/用户名/时间 + 正文 + 图片/音乐 + 评论 meta + 底部评论输入框（"评论 N"）；
      点击遮罩 / × / ESC 关闭；打开时锁定页面滚动；document 级委托兼容伪 SPA 重建 */
   /* 生成弹窗详情内容 HTML（数据字段与 gfTlItemHTML 完全一致） */
-  function gfTlDetailHTML(act, total, idx) {
-    var hasImgs = Number(act.images || 0) > 0
+  function gfTlDetailHTML(act) {
+    var hasImgs = activityImageCount(act) > 0
     var hasMusic = !!(act.music && act.music.title)
     var content = escapeHtml(act.content)
-    var like = act.like_count !== undefined ? Number(act.like_count) : (total - idx) * 3 + 4
     var comment = Number(act.comment_count || 0)
     var h = ''
     h += '<div class="gf-tl-dialog-ident">'
@@ -1154,31 +1646,28 @@
     h += '<div class="gf-tl-dialog-content">'
     h += '<p class="gf-tl-text">' + content + '</p>'
     if (hasImgs) {
-      h += '<div class="gf-activity-images">'
-      var imgN = Math.min(Number(act.images), 3)
-      for (var k = 0; k < imgN; k++) {
-        h += '<div class="gf-activity-ph gf-ph-' + (k % 3) + '"></div>'
-      }
-      h += '</div>'
-      h += '<span class="gf-activity-badge"><i class="fas fa-images fa-fw"></i> ' + Number(act.images) + '</span>'
+      h += activityImagesHTML(act)
     } else if (hasMusic) {
       h += '<div class="gf-activity-music">'
-      h += '<span class="gf-activity-music-ico"><i class="fas fa-music fa-fw"></i></span>'
+      h += '<span class="gf-activity-music-ico' + (act.music.cover ? '' : ' gf-activity-music-placeholder') + '">'
+      h += act.music.cover ? '<img class="gf-activity-music-cover" src="' + escapeHtml(act.music.cover) + '" alt="' + escapeHtml(act.music.title) + ' 封面" loading="lazy">' : '<i class="fas fa-music fa-fw"></i>'
+      h += '</span>'
       h += '<div class="gf-activity-music-text">'
       h += '<p class="gf-activity-music-title">' + escapeHtml(act.music.title) + '</p>'
       h += '<p class="gf-activity-music-artist">' + escapeHtml(act.music.artist || '') + '</p>'
       h += '</div>'
-      h += '<span class="gf-activity-music-count">1 首歌</span>'
       h += '</div>'
-    } else {
-      h += '<div class="gf-activity-footnote"><i class="fas fa-feather fa-fw"></i><span>Something to remember</span></div>'
+      if (act.music.audio) {
+        h += '<audio class="gf-activity-audio" controls preload="none" src="' + escapeHtml(act.music.audio) + '" aria-label="播放 ' + escapeHtml(act.music.title) + '">'
+        h += '当前浏览器不支持音频播放。'
+        h += '</audio>'
+      }
     }
     h += '</div>'
     h += '<div class="gf-tl-dialog-meta">'
-    h += '<span class="gf-tl-meta-item gf-tl-like"><i class="fas fa-heart fa-fw"></i> ' + like + ' 赞</span>'
     h += '<span class="gf-tl-meta-item"><i class="fas fa-comment-dots fa-fw"></i> ' + comment + ' 评论</span>'
     if (hasImgs) {
-      h += '<span class="gf-tl-meta-item"><i class="fas fa-image fa-fw"></i> ' + Number(act.images) + ' 张图</span>'
+      h += '<span class="gf-tl-meta-item"><i class="fas fa-image fa-fw"></i> ' + activityImageCount(act) + ' 张图</span>'
     }
     if (hasMusic) {
       h += '<span class="gf-tl-meta-item"><i class="fas fa-music fa-fw"></i> 1 首歌</span>'
@@ -1189,6 +1678,28 @@
     h += '<button class="gf-tl-dialog-send" type="button" aria-label="发送评论"><i class="fas fa-paper-plane fa-fw"></i></button>'
     h += '</div>'
     return h
+  }
+
+  function bindGfActivityAudio(container) {
+    if (!container) return
+    var players = container.querySelectorAll('.gf-activity-audio')
+    Array.prototype.forEach.call(players, function (player) {
+      if (player.__gfActivityAudioBound) return
+      player.__gfActivityAudioBound = true
+      player.addEventListener('play', function () {
+        if (typeof window.__gfPauseHomeMusicForActivity === 'function') {
+          window.__gfPauseHomeMusicForActivity()
+        }
+      })
+      function releaseHomeMusicTakeover() {
+        if (typeof window.__gfActivityMusicStopped === 'function') {
+          window.__gfActivityMusicStopped()
+        }
+      }
+      player.addEventListener('pause', releaseHomeMusicTakeover)
+      player.addEventListener('ended', releaseHomeMusicTakeover)
+      player.addEventListener('error', releaseHomeMusicTakeover)
+    })
   }
 
   /* 打开详情：按 data-gf-tl-idx 从注入数据取动态并渲染进弹窗骨架（srcId 缺省为最近动态页数据源） */
@@ -1203,7 +1714,10 @@
     var act = all[Number(idx)]
     if (!act) return
     var body = dialog.querySelector('.gf-tl-dialog-body')
-    if (body) body.innerHTML = gfTlDetailHTML(act, all.length, Number(idx))
+    if (body) {
+      body.innerHTML = gfTlDetailHTML(act)
+      bindGfActivityAudio(body)
+    }
     dialog.classList.add('gf-tl-dialog-open')
     dialog.setAttribute('aria-hidden', 'false')
     document.body.classList.add('gf-dialog-lock')
@@ -1212,6 +1726,13 @@
   function closeGfTlDialog() {
     var dialog = document.querySelector('.gf-tl-dialog')
     if (!dialog) return
+    var activityAudio = dialog.querySelector('.gf-activity-audio')
+    if (activityAudio) {
+      activityAudio.pause()
+      if (typeof window.__gfActivityMusicStopped === 'function') {
+        window.__gfActivityMusicStopped()
+      }
+    }
     dialog.classList.remove('gf-tl-dialog-open')
     dialog.setAttribute('aria-hidden', 'true')
     document.body.classList.remove('gf-dialog-lock')
@@ -1241,10 +1762,16 @@
         if (input) input.value = ''
         return
       }
-      var item = t.closest('.gf-tl-item') || t.closest('.gf-home-act-card')
-      if (item) {
-        if (t.closest('.gf-tl-share, a, button')) return
-        openGfTlDialog(item.getAttribute('data-gf-tl-idx'), item.getAttribute('data-gf-src'))
+      var timelineItem = t.closest('.gf-tl-item')
+      if (timelineItem) {
+        if (t.closest('a, button')) return
+        openGfTlDialog(timelineItem.getAttribute('data-gf-tl-idx'), timelineItem.getAttribute('data-gf-src'))
+        return
+      }
+      var homeCard = t.closest('.gf-home-act-card')
+      if (homeCard) {
+        if (t.closest('a, button')) return
+        openGfTlDialog(homeCard.getAttribute('data-gf-tl-idx'), homeCard.getAttribute('data-gf-src'))
       }
     }, true)
 
@@ -1299,13 +1826,23 @@
   var UNLOCK_TYPES = ['click', 'touchstart', 'keydown']
   var draggingProgress = false
   var lastVol = 0.5
+  var gfActivityDuckActive = false
+  var gfActivityTrackPlaying = false
+  var gfActivityHomeFadeComplete = false
+  var gfActivitySavedVolume = null
+  var gfActivityTakeoverOccurred = false
+  var gfActivityFadeFrame = 0
 
   function clamp (v, min, max) { return Math.max(min, Math.min(max, v)) }
 
   /* 音量：同步 audio.volume / 竖向条填充 / 按钮四档图标（静音-低-中-高） */
   function setVolumePct (v) {
     var vv = clamp(v, 0, 100)
-    audio.volume = vv / 100
+    if (gfActivityDuckActive && !gfActivityHomeFadeComplete) {
+      gfActivitySavedVolume = vv / 100
+    } else {
+      audio.volume = vv / 100
+    }
     volRange.value = vv
     volRange.style.setProperty('--gf-vol-pct', vv + '%')
     var cls = vv <= 0 ? 'fa-volume-xmark' : (vv <= 33 ? 'fa-volume-low' : (vv <= 66 ? 'fa-volume-up' : 'fa-volume-high'))
@@ -1358,6 +1895,53 @@
   var gfLoopPending = false
   var GF_LOOP_REPLAY_DELAY_MS = 5000
 
+  function gfPauseHomeMusicForActivity () {
+    gfActivityTrackPlaying = true
+    gfActivityTakeoverOccurred = true
+    if (gfActivityDuckActive) return
+
+    gfActivityDuckActive = true
+    clearTimeout(gfAutoplayTimer)
+    gfAutoplayTimer = null
+    clearTimeout(gfLoopTimer)
+    gfLoopTimer = null
+    gfLoopPending = false
+    gfRemoveUnlockListeners()
+
+    gfActivitySavedVolume = audio.volume
+    gfActivityHomeFadeComplete = audio.paused
+    if (audio.paused) return
+
+    var startingVolume = audio.volume
+    var startedAt = performance.now()
+    var fadeDuration = 900
+    function fadeHomeMusic (now) {
+      if (!gfActivityDuckActive) return
+      var progress = Math.min(1, (now - startedAt) / fadeDuration)
+      audio.volume = startingVolume * (1 - progress)
+      if (progress < 1) {
+        gfActivityFadeFrame = requestAnimationFrame(fadeHomeMusic)
+        return
+      }
+      gfActivityFadeFrame = 0
+      audio.pause()
+      gfActivityHomeFadeComplete = true
+      audio.volume = gfActivitySavedVolume == null ? startingVolume : gfActivitySavedVolume
+      setVolumePct(audio.volume * 100)
+      setPlaying(false)
+      if (!gfActivityTrackPlaying) gfActivityDuckActive = false
+    }
+    gfActivityFadeFrame = requestAnimationFrame(fadeHomeMusic)
+  }
+
+  function gfActivityMusicStopped () {
+    gfActivityTrackPlaying = false
+    if (gfActivityHomeFadeComplete) gfActivityDuckActive = false
+  }
+
+  window.__gfPauseHomeMusicForActivity = gfPauseHomeMusicForActivity
+  window.__gfActivityMusicStopped = gfActivityMusicStopped
+
   function gfRemoveUnlockListeners () {
     UNLOCK_TYPES.forEach(function (t) { window.removeEventListener(t, gfUnlockHandler, true) })
   }
@@ -1375,6 +1959,7 @@
 
   /* 恢复播放（保持当前 muted 状态）：仅当播放被中断/暂停时调用；有声被拒则回退静音播放 */
   function gfResumePlay () {
+    if (gfActivityDuckActive) return
     if (!audio.paused) return
     var p = audio.play()
     if (p && p.catch) {
@@ -1466,12 +2051,24 @@
   })
 
   toggleBtn.addEventListener('click', function () {
+    if (gfActivityDuckActive) return
     /* 手动操作（含 5s 重播窗口期）即取消待重播定时器，防止叠加 */
     clearTimeout(gfLoopTimer)
     gfLoopTimer = null
     gfLoopPending = false
     if (audio.paused) {
-      audio.play().then(function () { setPlaying(true) }).catch(function () {})
+      if (gfActivityTakeoverOccurred && audio.muted) {
+        audio.muted = false
+        audio.play().then(function () {
+          gfAutoplayUnlocked = true
+          setPlaying(true)
+        }).catch(function () {
+          audio.muted = true
+          audio.play().then(function () { setPlaying(true) }).catch(function () {})
+        })
+      } else {
+        audio.play().then(function () { setPlaying(true) }).catch(function () {})
+      }
     } else {
       audio.pause()
       setPlaying(false)
@@ -1560,7 +2157,7 @@
       var wasPlaying = !audio.paused
       audio.src = URL.createObjectURL(blob)
       // 换 src 会中断播放：播放中则按当前 muted 状态恢复（muted 必成功，有声被拒自动回退静音）
-      if (wasPlaying) {
+      if (wasPlaying && !gfActivityDuckActive) {
         gfResumePlay()
       }
     }).catch(function () {})

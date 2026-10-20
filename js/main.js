@@ -767,7 +767,7 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   const openMobileMenu = () => {
     const toggleMenu = document.getElementById('toggle-menu')
-    if (!toggleMenu) return
+    if (!toggleMenu || !document.getElementById('sidebar-menus')) return
     btf.addEventListenerPjax(toggleMenu, 'click', () => { sidebarFn.open() })
   }
 
