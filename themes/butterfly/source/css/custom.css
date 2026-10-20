@@ -350,43 +350,81 @@ body {
   color: #d2eef4;
 }
 
-/* ---------- 代码块：边框 + 圆角 + 标题条（R31：背景改白） ---------- */
+/* ---------- 代码块：铺满文章栏，标题与代码合并为单一面板 ---------- */
 #article-container .highlight {
-  border: 2px solid var(--grid-lilac) !important;
-  border-radius: 12px !important;
-  background: #ffffff !important;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  vertical-align: top;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  margin: 0 0 1.5rem;
+  border: 1px solid rgba(119, 153, 184, 0.34) !important;
+  border-radius: 14px !important;
+  background: #f2f7fc !important;
+  box-shadow: 0 8px 20px rgba(42, 73, 101, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
   overflow: hidden;
 }
 
 [data-theme="dark"] #article-container .highlight {
-  border-color: rgba(210, 238, 244, 0.25) !important;
-  background: #262626 !important;
+  border-color: rgba(173, 202, 224, 0.24) !important;
+  background: #1d2935 !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 #article-container .highlight .highlight-tools {
-  background: transparent;
-  border-bottom: 1px solid rgba(153, 170, 189, 0.35);
+  flex: 0 0 auto;
+  min-height: 34px;
+  height: auto;
+  background: rgba(255, 255, 255, 0.48);
+  border-bottom: 1px solid rgba(119, 153, 184, 0.22);
   font-family: var(--code-font-family);
   font-size: 0.8125rem;
 }
 
-/* 代码块语言标签（由 custom.js 注入） */
-.gf-code-lang {
-  display: inline-block;
-  font-family: var(--code-font-family);
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--blue-petal);
-  background: var(--blue-vapor);
-  border-radius: 999px;
-  padding: 1px 8px;
-  margin-right: 8px;
+[data-theme="dark"] #article-container .highlight .highlight-tools {
+  color: #b8d2e5;
+  background: rgba(255, 255, 255, 0.035);
+  border-bottom-color: rgba(173, 202, 224, 0.14);
 }
 
-[data-theme="dark"] .gf-code-lang {
-  color: #d2eef4;
-  background: rgba(210, 238, 244, 0.12);
+#article-container .highlight table {
+  flex: 0 1 auto;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  background: transparent;
+  border: 0;
+}
+
+#article-container .highlight td {
+  background: transparent;
+}
+
+#article-container .highlight pre {
+  background: transparent !important;
+  margin: 0;
+}
+
+#article-container .highlight .gutter pre {
+  padding: 0.55rem 0.7rem 0.55rem 0.9rem;
+  color: #9aabba;
+  background: rgba(119, 153, 184, 0.07) !important;
+}
+
+#article-container .highlight .code pre {
+  width: auto;
+  min-width: 100%;
+  padding: 0.55rem 0.95rem 0.55rem 0.35rem;
+}
+
+[data-theme="dark"] #article-container .highlight .gutter pre {
+  color: #8299ac;
+  background: rgba(255, 255, 255, 0.035) !important;
 }
 
 /* ---------- 文章头 ---------- */

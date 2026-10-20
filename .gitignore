@@ -6,3 +6,9 @@ node_modules/
 public/
 .deploy*/
 _multiconfig.yml
+.codex-staging/
+temp/
+build*.txt
+clean.txt
+err_capture.txt
+server_log.txt

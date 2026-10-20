@@ -1,36 +1,4 @@
-﻿/* Grey Flowers: 为代码块注入语言标签标题条 */
-(function () {
-  function injectCodeLang() {
-    document.querySelectorAll('#article-container .highlight').forEach(function (el) {
-      if (el.querySelector('.gf-code-lang')) return
-      var m = (el.className || '').match(/highlight-([a-z0-9]+)/)
-      var lang = m ? m[1] : 'code'
-      var tag = document.createElement('span')
-      tag.className = 'gf-code-lang'
-      tag.textContent = lang
-      var tools = el.querySelector('.highlight-tools') || el.querySelector('figcaption')
-      if (tools) {
-        tools.appendChild(tag)
-      } else {
-        var cap = document.createElement('div')
-        cap.className = 'gf-code-lang'
-        cap.textContent = lang
-        el.insertBefore(cap, el.firstChild)
-      }
-    })
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', injectCodeLang)
-  } else {
-    injectCodeLang()
-  }
-
-  // 伪 SPA 内容替换后复用：重新注入代码块语言标签
-  window.__gfCodeLangInject = injectCodeLang
-})();
-
-/* 友链交换示例：复制当前代码块内容 */
+﻿/* 友链交换示例：复制当前代码块内容 */
 (function () {
   function fallbackCopy(text) {
     var input = document.createElement('textarea')
@@ -450,9 +418,8 @@
     }
   }
 
-  /* SPA 替换后：重注入代码块语言标签 + 按新 URL 重激活菜单 + 三页（动态/关于/链接）初始化 + 主页（rail/相对时间）初始化 + 文章详情页（TOC/方格纸背景）初始化 */
+  /* SPA 替换后：按新 URL 重激活菜单 + 三页（动态/关于/链接）初始化 + 主页（rail/相对时间）初始化 + 文章详情页（TOC/方格纸背景）初始化 */
   function afterSwap() {
-    if (window.__gfCodeLangInject) window.__gfCodeLangInject()
     if (window.__gfNavMenuActivate) window.__gfNavMenuActivate()
     if (window.__gfGfPageInit) window.__gfGfPageInit()
     if (window.__gfHomeInit) window.__gfHomeInit()

@@ -9,6 +9,11 @@ friends:
     description: HeartGravity 的 Hexo 小站，欢迎来访。
     color: '#7aa2f7'
     image: https://avatars.githubusercontent.com/heartgravity
+  - site: SHAPE
+    owner: 紫耀风
+    url: http://123.56.246.74/
+    description: 记录技术，也记录生活。
+    color: '#5b8def'
 works:
   - site: The past
     owner: MXWqwq
