@@ -1,0 +1,161 @@
+extends includes/layout.pug
+
+block content
+  #gf-home
+    //- ============ 最近动态：横向滑动小帖 rail（全宽贯穿视口） ============
+    section#gf-home-activity.gf-home-section
+      .gf-hana-head
+        span.gf-hana-head-ico
+          svg.gf-hana-ico-activity(viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true')
+            path(d='M22 12h-4l-3 9L9 3l-3 9H2')
+        h2.gf-hana-head-title 最近动态
+        a.gf-hana-head-link(href=url_for('/tags/'))
+          span 查看全部动态
+          i.fas.fa-arrow-right.fa-fw
+      .gf-home-rail(data-gf-rail='')
+        - const gfActsAll = site.data.activities || []
+        - const gfActs = gfActsAll.slice(0, 10)
+        each act, ai in gfActs
+          - const actImageUrls = Array.isArray(act.image_urls) ? act.image_urls : []
+          - const actImageCount = Math.max(Number(act.images || 0), actImageUrls.length)
+          - const hasImgs = actImageCount > 0
+          - const hasMusic = !!(act.music && act.music.title)
+          - const typeLabel = hasImgs ? '图片' : (hasMusic ? '音乐' : '随记')
+          - const typeIcon = hasImgs ? 'fa-image' : (hasMusic ? 'fa-music' : 'fa-comment-dots')
+          - const typeCls = hasImgs ? 'gf-act-img' : (hasMusic ? 'gf-act-music' : 'gf-act-note')
+          article.gf-home-act-card(class=typeCls, data-gf-tl-idx=gfActsAll.indexOf(act), data-gf-src='gf-home-activities', role='button', tabindex='0')
+            .gf-activity-top
+              .gf-activity-ident
+                span.gf-activity-type-ico
+                  i.fas.fa-fw(class=typeIcon)
+                .gf-activity-ident-text
+                  p.gf-activity-type= typeLabel
+                  time.gf-activity-date(data-gf-date=act.date)= act.date
+              span.gf-activity-compact= act.date.slice(5)
+            .gf-activity-body
+              p.gf-activity-text= act.content
+              if hasImgs
+                .gf-activity-images
+                  if actImageUrls.length
+                    each imageUrl, k in actImageUrls
+                      img.gf-activity-photo(src=url_for(imageUrl) alt='动态配图 ' + (k + 1) loading='lazy')
+                  else
+                    - for (var k = 0; k < Math.min(actImageCount, 3); k++)
+                      .gf-activity-ph(class='gf-ph-' + (k % 3))
+              else if hasMusic
+                .gf-activity-music
+                  span.gf-activity-music-ico(class=act.music.cover ? '' : 'gf-activity-music-placeholder')
+                    if act.music.cover
+                      img.gf-activity-music-cover(src=url_for(act.music.cover) alt=act.music.title + ' 封面' loading='lazy')
+                    else
+                      i.fas.fa-music.fa-fw
+                  .gf-activity-music-text
+                    p.gf-activity-music-title= act.music.title
+                    p.gf-activity-music-artist= act.music.artist || ''
+              .gf-activity-meta
+                span.gf-activity-meta-item
+                  i.fas.fa-comment-dots.fa-fw
+                  = ' ' + (act.comment_count || 0) + ' 评论'
+                if hasImgs
+                  span.gf-activity-meta-item
+                    i.fas.fa-image.fa-fw
+                    = ' ' + actImageCount + ' 张图'
+                if hasMusic
+                  span.gf-activity-meta-item
+                    i.fas.fa-music.fa-fw
+                    = ' 1 首歌'
+        .gf-load-more-trigger(data-gf-load-more='', aria-hidden='true')
+          span.gf-load-more-spinner
+
+    //- 全部动态数据注入（分页加载使用；勿在内容中放置 </script> 字样）
+    script(type='application/json' id='gf-home-activities')!= JSON.stringify(gfActsAll)
+
+    //- ============ 动态详情弹窗（复刻 Grey Flowers DetailDialog：居中白卡 + 深灰变灰遮罩 + 右上角×；内容由 custom.js 渲染，与最近动态页共用） ============
+    .gf-tl-dialog(aria-hidden='true')
+      .gf-tl-dialog-mask
+      .gf-tl-dialog-panel(role='dialog' aria-modal='true' aria-labelledby='gf-tl-dialog-title')
+        .gf-tl-dialog-head
+          span#gf-tl-dialog-title.gf-tl-dialog-title 动态详情
+          button.gf-tl-dialog-close(type='button' aria-label='关闭')
+            i.fas.fa-times.fa-fw
+        .gf-tl-dialog-body
+
+    //- ============ 最近文章：最近 5 篇卡片 ============
+    section#gf-home-articles.gf-home-section
+      .gf-hana-head
+        span.gf-hana-head-ico
+          i.fas.fa-list.fa-fw
+        h2.gf-hana-head-title 最近文章
+      - const homePosts = site.posts.data.slice().sort((a, b) => (b.date || 0) - (a.date || 0)).slice(0, 5)
+      .gf-home-post-grid
+        each article, idx in homePosts
+          - const link = article.link || article.path
+          - const title = article.title || _p('no_title')
+          - const tagArr = (article.tags && article.tags.data) ? article.tags.data : []
+          - const rawDesc = article.description || ''
+          - const stripContent = article.content ? article.content.replace(/<[^>]*>/g, '').replace(/[#*`>_~\-]/g, '').replace(/\s+/g, ' ').trim() : ''
+          - const desc = rawDesc ? rawDesc : stripContent.slice(0, 140)
+          - const wordCount = article.content ? article.content.replace(/<[^>]*>/g, '').replace(/\s+/g, '').length : 0
+          if idx === 0
+            a.gf-home-post-card.gf-home-post-card--feature(href=url_for(link) title=title)
+              .gf-home-post-info.gf-home-post-info--feature
+                .gf-home-post-tags
+                  if tagArr.length > 0
+                    each tag, i in tagArr.slice(0, 3)
+                      span= tag.name.toUpperCase()
+                      if i < Math.min(tagArr.length, 3) - 1
+                        span.gf-post-tag-sep ·
+                h3.gf-home-post-title= title
+                if desc
+                  p.gf-home-post-desc= desc
+                .gf-home-post-meta
+                  .gf-home-post-meta-left
+                    span.gf-post-meta-item
+                      i.far.fa-calendar-alt
+                      = ' ' + date(article.date, 'YYYY-MM-DD')
+                    if wordCount > 0
+                      span.gf-post-meta-item
+                        i.far.fa-file-alt
+                        = ' ' + wordCount + ' 字'
+                  span.gf-home-post-arrow
+                    i.fas.fa-arrow-right
+              .gf-home-post-divider
+              .gf-home-post-cover.gf-home-post-cover--feature
+                if article.cover
+                  img.gf-home-post-cover-img(src=url_for(article.cover) alt=title loading='lazy')
+                else
+                  .gf-home-post-cover-default
+                    span.gf-home-post-cover-brand= gf_tc_kicker()
+                    span.gf-home-post-cover-title= title
+                    span.gf-home-post-cover-slogan= gf_tc_slogan(idx)
+          else
+            a.gf-home-post-card.gf-home-post-card--standard(href=url_for(link) title=title)
+              .gf-home-post-cover
+                if article.cover
+                  img.gf-home-post-cover-img(src=url_for(article.cover) alt=title loading='lazy')
+                else
+                  .gf-home-post-cover-default
+                    span.gf-home-post-cover-brand= gf_tc_kicker()
+                    span.gf-home-post-cover-title= title
+                    span.gf-home-post-cover-slogan= gf_tc_slogan(idx)
+              .gf-home-post-info
+                .gf-home-post-tags
+                  if tagArr.length > 0
+                    each tag, i in tagArr.slice(0, 3)
+                      span= tag.name.toUpperCase()
+                      if i < Math.min(tagArr.length, 3) - 1
+                        span.gf-post-tag-sep ·
+                h3.gf-home-post-title= title
+                if desc
+                  p.gf-home-post-desc= desc
+                .gf-home-post-meta
+                  .gf-home-post-meta-left
+                    span.gf-post-meta-item
+                      i.far.fa-calendar-alt
+                      = ' ' + date(article.date, 'YYYY-MM-DD')
+                    if wordCount > 0
+                      span.gf-post-meta-item
+                        i.far.fa-file-alt
+                        = ' ' + wordCount + ' 字'
+                  span.gf-home-post-arrow
+                    i.fas.fa-arrow-right

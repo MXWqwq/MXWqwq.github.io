@@ -1,0 +1,67 @@
+extends includes/layout.pug
+
+block content
+  - const gfActsAll = (site.data.activities || [])
+  - const gfActsFirst = gfActsAll.slice(0, 12)
+  #gf-recently
+    .gf-hana-head
+      span.gf-hana-head-ico
+        svg.gf-hana-ico-activity(viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true')
+          path(d='M22 12h-4l-3 9L9 3l-3 9H2')
+      h2.gf-hana-head-title 最近动态
+    //- ============ 时间线卡片（复刻 Grey Flowers /recently：左侧蓝线 + 蓝点节点） ============
+    ul.gf-tl-list
+      each act, i in gfActsFirst
+        li.gf-tl-item(data-gf-tl-idx=i title='查看动态详情' role='button' tabindex='0')
+          article.gf-tl-card
+            header.gf-tl-head
+              .gf-tl-ident
+                img.gf-tl-avatar(src=url_for('/img/avatar.jpg') alt='avatar')
+                .gf-tl-ident-text
+                  span.gf-tl-user MXWqwq
+                  time.gf-tl-time(datetime=act.date)
+                    i.far.fa-clock.fa-fw
+                    = ' ' + act.date
+            .gf-tl-body
+              p.gf-tl-text= act.content
+              - const actImageUrls = Array.isArray(act.image_urls) ? act.image_urls : []
+              - const actImageCount = Math.max(Number(act.images || 0), actImageUrls.length)
+              - const hasImgs = actImageCount > 0
+              - const hasMusic = !!(act.music && act.music.title)
+              if hasImgs
+                .gf-activity-images
+                  if actImageUrls.length
+                    each imageUrl, k in actImageUrls
+                      img.gf-activity-photo(src=url_for(imageUrl) alt='动态配图 ' + (k + 1) loading='lazy')
+                  else
+                    - for (var k = 0; k < Math.min(actImageCount, 3); k++)
+                      .gf-activity-ph(class='gf-ph-' + (k % 3))
+              else if hasMusic
+                .gf-activity-music
+                  span.gf-activity-music-ico(class=act.music.cover ? '' : 'gf-activity-music-placeholder')
+                    if act.music.cover
+                      img.gf-activity-music-cover(src=url_for(act.music.cover) alt=act.music.title + ' 封面' loading='lazy')
+                    else
+                      i.fas.fa-music.fa-fw
+                  .gf-activity-music-text
+                    p.gf-activity-music-title= act.music.title
+                    p.gf-activity-music-artist= act.music.artist || ''
+            footer.gf-tl-meta
+              span.gf-tl-meta-item.gf-tl-comment
+                i.far.fa-comment-dots.fa-fw
+                = ' ' + (act.comment_count || 0)
+    //- ============ 滚动加载触发器（IntersectionObserver，仿 loadMoreTrigger + LoaderCircle） ============
+    .gf-tl-more(data-gf-tl-more='' aria-hidden='true')
+      span.gf-tl-spinner
+      span.gf-tl-done-text 全部动态已加载完毕
+    //- ============ 动态详情弹窗（复刻 Grey Flowers DetailDialog：居中白卡 + 深灰磨砂遮罩 + 右上角×；内容由 custom.js 渲染） ============
+    .gf-tl-dialog(aria-hidden='true')
+      .gf-tl-dialog-mask
+      .gf-tl-dialog-panel(role='dialog' aria-modal='true' aria-labelledby='gf-tl-dialog-title')
+        .gf-tl-dialog-head
+          span#gf-tl-dialog-title.gf-tl-dialog-title 动态详情
+          button.gf-tl-dialog-close(type='button' aria-label='关闭')
+            i.fas.fa-times.fa-fw
+        .gf-tl-dialog-body
+    //- 全部动态数据注入（滚动加载使用；勿在内容中放置 </script> 字样）
+    script(type='application/json' id='gf-recently-activities')!= JSON.stringify(gfActsAll)

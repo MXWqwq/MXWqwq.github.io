@@ -1,0 +1,18 @@
+# 链接页数据（source/_data/links.yml）
+# friends - 友情链接：site / owner / url / description / color（小站主题色），可选 image（头像地址）
+# works   - 自己写的一些作品：同上
+# 修改此文件即可新增/删除卡片，构建后自动生效
+friends:
+  - site: HeartGravity
+    owner: heartgravity
+    url: https://heartgravity.github.io
+    description: HeartGravity 的 Hexo 小站，欢迎来访。
+    color: '#7aa2f7'
+    image: https://avatars.githubusercontent.com/heartgravity
+works:
+  - site: The past
+    owner: MXWqwq
+    url: https://mxwqwq.github.io
+    description: '已逝去的未来，和，未完结的过去。'
+    color: '#4e8a8a'
+    image: /img/avatar.jpg

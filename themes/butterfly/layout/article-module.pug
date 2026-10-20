@@ -1,0 +1,304 @@
+extends includes/layout.pug
+
+block content
+  - const gfPosts = site.posts.sort('date', -1).toArray()
+  - const gfTotal = gfPosts.length
+  - const gfType = page.amType || 'posts'
+  #article-module
+    .gf-am-head
+      h1.gf-am-title 一些文章
+      .gf-am-breadcrumb
+        case gfType
+          when 'posts'
+            a.gf-bc-link(href=url_for('/articles/')) 文章
+          when 'tags'
+            a.gf-bc-link(href=url_for('/articles/')) 文章
+            span.gf-bc-sep(aria-hidden='true') &gt;
+            span.gf-bc-current(aria-current='page') 标签
+          when 'tag-detail'
+            a.gf-bc-link(href=url_for('/articles/')) 文章
+            span.gf-bc-sep(aria-hidden='true') &gt;
+            a.gf-bc-link(href=url_for('/articles/tags/')) 标签
+            span.gf-bc-sep(aria-hidden='true') &gt;
+            span.gf-bc-current(aria-current='page')
+              span.gf-bc-current-title= page.amTag || '标签'
+          when 'categories'
+            a.gf-bc-link(href=url_for('/articles/')) 文章
+            span.gf-bc-sep(aria-hidden='true') &gt;
+            span.gf-bc-current(aria-current='page') 目录
+          when 'category-detail'
+            a.gf-bc-link(href=url_for('/articles/')) 文章
+            span.gf-bc-sep(aria-hidden='true') &gt;
+            a.gf-bc-link(href=url_for('/articles/categories/') title='返回目录') 目录
+            span.gf-bc-sep(aria-hidden='true') &gt;
+            span.gf-bc-current(aria-current='page')
+              span.gf-bc-current-title= page.amCategory || '目录'
+          when 'archives'
+            a.gf-bc-link(href=url_for('/articles/')) 文章
+            span.gf-bc-sep(aria-hidden='true') &gt;
+            span.gf-bc-current(aria-current='page') 归档
+          default
+            a.gf-bc-link(href=url_for('/articles/')) 文章
+    .gf-am-shell
+      nav.gf-am-side(aria-label='文章导航')
+        span.gf-bm-dot(aria-hidden='true')
+        span.gf-bm-line(aria-hidden='true')
+        .gf-bm-tags
+          a.gf-am-nav-item.gf-am-nav-root(class={active: gfType === 'posts'} href=url_for('/articles/') data-am='posts')
+            span.gf-am-nav-ico
+              svg(viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true')
+                path(d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z')/
+                path(d='M14 2v6h6')/
+                line(x1='8' y1='13' x2='16' y2='13')/
+                line(x1='8' y1='17' x2='16' y2='17')/
+            span.gf-am-nav-text 文章
+            i.fas.fa-arrow-right.gf-am-nav-arrow
+          a.gf-am-nav-item(class={active: gfType === 'tags' || gfType === 'tag-detail'} href=url_for('/articles/tags/') data-am='tags')
+            span.gf-am-nav-ico
+              svg(viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true')
+                path(d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z')/
+                line(x1='7' y1='7' x2='7.01' y2='7')/
+            span.gf-am-nav-text 标签
+            i.fas.fa-arrow-right.gf-am-nav-arrow
+          a.gf-am-nav-item(class={active: gfType === 'categories' || gfType === 'category-detail'} href=url_for('/articles/categories/') data-am='categories')
+            span.gf-am-nav-ico
+              svg(viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true')
+                path(d='M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z')/
+            span.gf-am-nav-text 目录
+            i.fas.fa-arrow-right.gf-am-nav-arrow
+          a.gf-am-nav-item(class={active: gfType === 'archives'} href=url_for('/articles/archives/') data-am='archives')
+            span.gf-am-nav-ico
+              svg(viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true')
+                rect(x='3' y='4' width='18' height='18' rx='2')/
+                line(x1='16' y1='2' x2='16' y2='6')/
+                line(x1='8' y1='2' x2='8' y2='6')/
+                line(x1='3' y1='10' x2='21' y2='10')/
+            span.gf-am-nav-text 归档
+            i.fas.fa-arrow-right.gf-am-nav-arrow
+      .gf-am-content
+        case gfType
+          when 'posts'
+            .gf-article-list
+              each post, i in gfPosts
+                - const postTags = post.tags.toArray()
+                a.gf-article-card(href=url_for(post.path) title=post.title)
+                  .gf-article-body
+                    .gf-article-tags
+                      each tag, ti in postTags
+                        span.gf-article-tag= tag.name
+                        if ti < postTags.length - 1
+                          span.gf-article-tag-sep ·
+                    h2.gf-article-title= post.title
+                    p.gf-article-desc= gf_excerpt(post, 110)
+                    .gf-article-meta
+                      .gf-meta-left
+                        span.gf-meta-item
+                          i.fas.fa-calendar-days.fa-fw
+                          time(datetime=gf_date_str(post.date))= gf_date_str(post.date)
+                        span.gf-meta-item
+                          i.fas.fa-file-lines.fa-fw
+                          span= gf_word_count(post.content) + '字'
+                      span.gf-article-arrow
+                        i.fas.fa-arrow-right
+                  if post.cover || post.top_img
+                    .gf-article-cover
+                      img(src=url_for(post.cover || post.top_img) alt=post.title loading='lazy')
+                  else
+                    .gf-title-cover(class='gf-tc-' + (i % 4))
+                      span.gf-tc-kicker= gf_tc_kicker(post)
+                      span.gf-tc-title= post.title
+                      span.gf-tc-slogan= gf_tc_slogan(i)
+          when 'tags'
+            - const gfTags = site.tags.sort('name').toArray()
+            header.gf-am-stat
+              span 共计
+              b= gfTags.length
+              span 个标签...零星的碎片拼凑出我的过去
+            .gf-tag-cloud
+              each tag in gfTags
+                a.gf-tag-chip(href=url_for('/articles/tags/' + tag.slug + '/') title='有' + tag.length + '篇文章')
+                  span.gf-tag-name= tag.name
+          when 'tag-detail'
+            - const gfTagPosts = page.amTagPosts || []
+            header.gf-am-stat
+              span 标签「
+              b= page.amTag || '标签'
+              span 」共计
+              b= gfTagPosts.length
+              span 篇文章
+            if gfTagPosts.length
+              .gf-article-list.gf-tag-article-list
+                each post, i in gfTagPosts
+                  - const postTags = post.tags.toArray()
+                  a.gf-article-card(href=url_for(post.path) title=post.title)
+                    .gf-article-body
+                      .gf-article-tags
+                        each tag, ti in postTags
+                          span.gf-article-tag= tag.name
+                          if ti < postTags.length - 1
+                            span.gf-article-tag-sep ·
+                      h2.gf-article-title= post.title
+                      p.gf-article-desc= gf_excerpt(post, 110)
+                      .gf-article-meta
+                        .gf-meta-left
+                          span.gf-meta-item
+                            i.fas.fa-calendar-days.fa-fw
+                            time(datetime=gf_date_str(post.date))= gf_date_str(post.date)
+                          span.gf-meta-item
+                            i.fas.fa-file-lines.fa-fw
+                            span= gf_word_count(post.content) + '字'
+                        span.gf-article-arrow
+                          i.fas.fa-arrow-right
+                    if post.cover || post.top_img
+                      .gf-article-cover
+                        img(src=url_for(post.cover || post.top_img) alt=post.title loading='lazy')
+                    else
+                      .gf-title-cover(class='gf-tc-' + (i % 4))
+                        span.gf-tc-kicker= gf_tc_kicker(post)
+                        span.gf-tc-title= post.title
+                        span.gf-tc-slogan= gf_tc_slogan(i)
+            else
+              .gf-cat-empty 此标签暂时没有文章
+          when 'categories'
+            - const gfCatMap = Object.create(null)
+            - site.categories.sort('name').toArray().forEach(function (cat) { gfCatMap[String(cat.name)] = { name: String(cat.name), slug: cat.slug, length: cat.length, posts: cat.posts.sort('date', -1).toArray(), hasPosts: true, description: '', cover: '' } })
+            - const gfRegisteredCats = site.data.categories || []
+            - gfRegisteredCats.forEach(function (item) { const name = typeof item === 'string' ? item : item && item.name; if (name) { const key = String(name); const description = item && item.description ? String(item.description) : ''; const cover = item && item.cover ? String(item.cover) : ''; if (!gfCatMap[key]) gfCatMap[key] = { name: key, slug: '', length: 0, posts: [], hasPosts: false, description: description, cover: cover }; else { if (description) gfCatMap[key].description = description; if (cover) gfCatMap[key].cover = cover } } })
+            - const gfCats = Object.keys(gfCatMap).map(function (name) { return gfCatMap[name] }).sort(function (a, b) { return a.name.localeCompare(b.name, 'zh-CN') })
+            header.gf-am-stat
+              span 共计
+              b= gfCats.length
+              span 个目录...过去的片段，看得到，却留不住
+            if gfCats.length
+              .gf-cat-grid
+                each cat, ci in gfCats
+                  - const gfCatUrl = url_for('/articles/categories/' + cat.slug + '/')
+                  article.gf-cat-card(class='gf-cat-card--' + (ci % 4))
+                    .gf-cat-cover(style=cat.cover ? 'background-image: linear-gradient(rgba(245,250,252,.58), rgba(245,250,252,.82)), url(' + url_for(cat.cover) + '); background-size: cover; background-position: center;' : null)
+                      .gf-cat-cover-copy
+                        span.gf-cat-cover-kicker THE PAST IS NEVER DEAD
+                        if cat.hasPosts
+                          a.gf-cat-name(href=gfCatUrl)= cat.name
+                        else
+                          span.gf-cat-name= cat.name
+                        if cat.description
+                          p.gf-cat-cover-description= cat.description
+                    .gf-cat-content
+                      .gf-cat-head
+                        i.fas.fa-folder-open.fa-fw(aria-hidden='true')
+                        span.gf-cat-head-label= cat.length + ' 篇收录'
+                      if cat.posts.length
+                        ul.gf-cat-posts
+                          each p, pi in cat.posts.slice(0, 3)
+                            li
+                              span.gf-cat-track-no= String(pi + 1).padStart(2, '0')
+                              a.gf-cat-post-link(href=url_for(p.path) title=p.title)= p.title
+                          if cat.posts.length > 3
+                            li.gf-cat-track-ellipsis
+                              span.gf-cat-track-no(aria-hidden='true')
+                              span.gf-cat-track-dots ··· ···
+                      else
+                        p.gf-cat-empty-record 暂无收录
+                      .gf-cat-foot
+                        span.gf-cat-count= cat.length + ' 篇文章'
+                        if cat.hasPosts
+                          a.gf-cat-more(href=gfCatUrl aria-label='打开' + cat.name + '目录')
+                            span more
+                            i.fas.fa-arrow-right(aria-hidden='true')
+            else
+              .gf-cat-empty 暂无目录
+          when 'category-detail'
+            - const gfCategoryPosts = page.amCategoryPosts || []
+            header.gf-category-album(class='gf-category-album--' + ((page.amCategoryIndex || 0) % 4) style=page.amCategoryCover ? 'background-image: linear-gradient(rgba(245,250,252,.58), rgba(245,250,252,.82)), url(' + url_for(page.amCategoryCover) + '); background-size: cover; background-position: center;' : null)
+              .gf-category-album-art(aria-hidden='true')
+                span.gf-category-album-disc
+              .gf-category-album-copy
+                span.gf-category-album-kicker THE PAST IS NEVER DEAD
+                h2.gf-category-album-title= page.amCategory || '目录'
+                p.gf-category-album-description= page.amCategoryDescription || '暂未添加目录备注。'
+                span.gf-category-album-count= String(gfCategoryPosts.length).padStart(2, '0') + ' ARTICLES'
+            if gfCategoryPosts.length
+              .gf-article-list.gf-category-article-list
+                each post, i in gfCategoryPosts
+                  - const postTags = post.tags.toArray()
+                  a.gf-article-card(href=url_for(post.path) title=post.title)
+                    .gf-article-body
+                      .gf-article-tags
+                        each tag, ti in postTags
+                          span.gf-article-tag= tag.name
+                          if ti < postTags.length - 1
+                            span.gf-article-tag-sep ·
+                      h2.gf-article-title= post.title
+                      p.gf-article-desc= gf_excerpt(post, 110)
+                      .gf-article-meta
+                        .gf-meta-left
+                          span.gf-meta-item
+                            i.fas.fa-calendar-days.fa-fw
+                            time(datetime=gf_date_str(post.date))= gf_date_str(post.date)
+                          span.gf-meta-item
+                            i.fas.fa-file-lines.fa-fw
+                            span= gf_word_count(post.content) + '字'
+                        span.gf-article-arrow
+                          i.fas.fa-arrow-right
+                    if post.cover || post.top_img
+                      .gf-article-cover
+                        img(src=url_for(post.cover || post.top_img) alt=post.title loading='lazy')
+                    else
+                      .gf-title-cover(class='gf-tc-' + (i % 4))
+                        span.gf-tc-kicker= gf_tc_kicker(post)
+                        span.gf-tc-title= post.title
+                        span.gf-tc-slogan= gf_tc_slogan(i)
+            else
+              .gf-cat-empty 此目录暂时没有文章
+          when 'archives'
+            - const gfYearMap = {}
+            - gfPosts.forEach(function (p) { const y = p.date.year(); const m = p.date.month() + 1; gfYearMap[y] = gfYearMap[y] || {}; gfYearMap[y][m] = gfYearMap[y][m] || []; gfYearMap[y][m].push(p); })
+            - const gfYears = Object.keys(gfYearMap).sort(function (a, b) { return Number(b) - Number(a); })
+            - const gfCurYear = gfYears[0] || ''
+            - const gfMonths = Object.keys(gfYearMap[gfCurYear] || {}).sort(function (a, b) { return Number(b) - Number(a); })
+            - const gfCurMonth = gfMonths[0] || ''
+            header.gf-am-stat
+              span 共计
+              b= gfTotal
+              span 篇文章...还有很多回忆没有收录
+            .gf-archive-years.gf-hana-card
+              each y in gfYears
+                span.gf-archive-year(class={active: y === gfCurYear} data-year=y)= y
+            each y in gfYears
+              - const monthsOfYear = Object.keys(gfYearMap[y]).sort(function (a, b) { return Number(b) - Number(a); })
+              .gf-archive-months.gf-hana-card(class={active: y === gfCurYear} data-year=y)
+                each m in monthsOfYear
+                  span.gf-archive-month(class={active: y === gfCurYear && m === gfCurMonth} data-month=m)= m + ' 月'
+            .gf-archive-groups
+              each y in gfYears
+                each m in Object.keys(gfYearMap[y]).sort(function (a, b) { return Number(b) - Number(a); })
+                  .gf-archive-group(class={show: y === gfCurYear && m === gfCurMonth} data-year=y data-month=m)
+                    each p, pi in gfYearMap[y][m]
+                      - const pTags = p.tags.toArray()
+                      a.gf-archive-card(href=url_for(p.path) title=p.title)
+                        if p.cover || p.top_img
+                          .gf-archive-cover
+                            img(src=url_for(p.cover || p.top_img) alt=p.title loading='lazy')
+                        else
+                          .gf-title-cover.gf-tc-arch(class='gf-tc-' + ((y + m + pi) % 4))
+                            span.gf-tc-kicker= gf_tc_kicker(p)
+                            span.gf-tc-title= p.title
+                            span.gf-tc-slogan= gf_tc_slogan(pi)
+                        .gf-archive-body
+                          .gf-article-tags
+                            each tag, ti in pTags
+                              span.gf-article-tag= tag.name
+                              if ti < pTags.length - 1
+                                span.gf-article-tag-sep ·
+                          h3.gf-archive-title= p.title
+                          p.gf-archive-desc= gf_excerpt(p, 80)
+                          .gf-archive-meta
+                            .gf-meta-left
+                              span.gf-meta-item
+                                i.fas.fa-calendar-days.fa-fw
+                                time(datetime=gf_date_str(p.date))= gf_date_str(p.date)
+                              span.gf-meta-item
+                                i.fas.fa-file-lines.fa-fw
+                                span= gf_word_count(p.content) + '字'
+                            span.gf-article-arrow
+                              i.fas.fa-arrow-right

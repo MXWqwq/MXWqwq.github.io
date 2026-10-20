@@ -1,0 +1,128 @@
+- var globalPageType = getPageType(page, is_home)
+- var htmlClassHideAside = theme.aside.enable && theme.aside.hide ? 'hide-aside' : ''
+- page.aside = globalPageType === 'archive' ? theme.aside.display.archive: globalPageType === 'category' ? theme.aside.display.category : globalPageType === 'tag' ? theme.aside.display.tag : page.aside
+- var hideAside = !theme.aside.enable || page.aside === false || is_home() ? 'hide-aside' : ''
+- var pageType = globalPageType === 'post' ? 'post' : 'page'
+- pageType = page.type ? pageType + ' type-' + page.type : pageType
+
+doctype html
+html(lang=config.language data-theme=theme.display_mode class=htmlClassHideAside)
+  head
+    include ./head.pug
+  body
+    //- Full document loads only. This node lives outside the Pjax swap targets.
+    #gf-entry-loading(role='status' aria-live='polite' aria-label='页面加载中')
+      svg.gf-entry-umbrella(viewBox='0 0 120 120' fill='none' stroke='currentColor' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true')
+        g(transform='rotate(-22 60 60)')
+          path(d='M14 56 C19 31 38 15 62 14 C87 14 105 30 111 55 C103 49 97 49 90 56 C83 49 75 49 66 56 C57 49 49 49 41 56 C33 49 24 49 14 56 Z')
+          path(d='M62 14 C38 28 32 43 14 56')
+          path(d='M62 14 C49 28 43 43 41 56')
+          path(d='M62 14 C61 28 64 43 66 56')
+          path(d='M62 14 C78 28 86 43 90 56')
+          path(d='M62 14 C94 29 103 43 111 55')
+          path(d='M62 14 L64 94 C65 108 45 110 45 98')
+      span.gf-entry-loading-text 页面加载中
+    noscript
+      style.
+        #gf-entry-loading { display: none !important; }
+    script.
+      (() => {
+        const overlay = document.getElementById('gf-entry-loading')
+        if (!overlay) return
+
+        const started = performance.now()
+        const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        const minimum = reducedMotion ? 0 : 550
+        let dismissed = false
+        document.documentElement.classList.add('gf-entry-loading')
+
+        const dismiss = () => {
+          if (dismissed) return
+          dismissed = true
+          const remaining = Math.max(0, minimum - (performance.now() - started))
+          window.setTimeout(() => {
+            document.documentElement.classList.remove('gf-entry-loading')
+            overlay.setAttribute('aria-hidden', 'true')
+            overlay.classList.add('is-dismissing')
+            if (reducedMotion) {
+              overlay.remove()
+              return
+            }
+            const remove = () => overlay.remove()
+            overlay.addEventListener('transitionend', remove, { once: true })
+            window.setTimeout(remove, 1000)
+          }, remaining)
+        }
+
+        if (document.readyState === 'complete') dismiss()
+        else window.addEventListener('load', dismiss, { once: true })
+        window.setTimeout(dismiss, 6000)
+      })()
+
+    !=partial('includes/loading/index', {}, {cache: true})
+
+    if theme.background
+      if !Array.isArray(theme.background)
+        #web_bg.bg-animation(style=getBgPath(theme.background))
+      else
+        #web_bg.bg-animation
+        - const bgStyleArr = theme.background.map(getBgPath)
+        script.
+          (() => {
+            const arr = !{JSON.stringify(bgStyleArr)}
+            const webBgDiv = document.getElementById('web_bg')
+
+            const setRandomBg = () => {
+              webBgDiv.style = arr[Math.floor(Math.random() * arr.length)]
+              requestAnimationFrame(() => webBgDiv.classList.add('bg-animation'))
+            }
+
+            document.addEventListener('pjax:send', () => {
+              webBgDiv.style = ''
+              webBgDiv.classList.remove('bg-animation')
+            })
+
+            document.addEventListener('pjax:complete', setRandomBg)
+            document.addEventListener('DOMContentLoaded', setRandomBg)
+          })()
+
+    !=partial('includes/sidebar', {}, {cache: true})
+
+    #body-wrap(class=pageType)
+      include ./header/index.pug
+      include ./header/nav.pug
+
+      main#content-inner.layout(class=hideAside)
+        if body
+          div!= body
+        else
+          block content
+          if theme.aside.enable && page.aside !== false && !is_home()
+            include widget/index.pug
+
+      - const footerBg = theme.footer_img
+      - const footer_bg = footerBg ? footerBg === true ? bg_img : getBgPath(footerBg) : ''
+      footer#footer(style=footer_bg)
+        !=partial('includes/footer', {}, {cache: true})
+
+    include ./rightside.pug
+
+    //- ============ 全局搜索数据（所有文章，供前端模糊检索；勿在内容中放置 </script> 字样） ============
+    - const gfSearchPosts = site.posts.data.slice().sort((a, b) => (b.date || 0) - (a.date || 0)).map(p => ({ title: p.title || '', path: url_for(p.link || p.path), date: date(p.date, 'YYYY-MM-DD'), tags: (p.tags && p.tags.data ? p.tags.data.map(t => t.name) : []), categories: (p.categories && p.categories.data ? p.categories.data.map(c => c.name) : []), desc: (p.description || gf_search_text(p.content)).slice(0, 160), body: gf_search_text(p.content) }))
+    script(type='application/json' id='gf-search-posts')!= JSON.stringify(gfSearchPosts).replace(/<\//g, '<\\/')
+
+    //- ============ 全局搜索模态（Grey Flowers 风格：居中白卡 + 遮罩；三态由 custom.js 渲染） ============
+    #gf-search-modal.gf-search-modal(aria-hidden='true')
+      .gf-search-mask
+      .gf-search-panel(role='dialog' aria-modal='true' aria-label='搜索')
+        .gf-search-input-wrap
+          span.gf-search-input-ico
+            svg(viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true')
+              circle(cx='11' cy='11' r='7')
+              line(x1='21' y1='21' x2='16.65' y2='16.65')
+          input#gf-search-input(type='text' placeholder='搜索文章…' autocomplete='off')
+          button#gf-search-close.gf-search-close(type='button' aria-label='关闭')
+            i.fas.fa-times.fa-fw
+        #gf-search-body.gf-search-body
+
+    include ./additional-js.pug

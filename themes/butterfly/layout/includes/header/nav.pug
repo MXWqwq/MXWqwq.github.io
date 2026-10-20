@@ -1,0 +1,51 @@
+nav#nav
+  span#blog-info
+    span.nav-site-title
+      if theme.nav.logo
+        img.site-icon(src=url_for(theme.nav.logo) alt='Logo')
+      span.site-name The past
+    if globalPageType === 'post' && theme.nav.display_post_title
+      a.nav-page-title(href=url_for('/'))
+        span.site-name=(page.title || config.title)
+        span.site-name
+          i.fa-solid.fa-circle-arrow-left
+          span= '  ' + _p('post.back_to_home')
+
+  #menus
+    .menus_items
+      a.menus_item(href=url_for('/') data-path='/' class={active: is_home() || (globalPageType !== 'post' && page.layout !== 'article-module' && !is_current('/articles/') && !is_current('/articles/tags/') && !is_current('/articles/categories/') && !is_current('/articles/archives/') && !is_current('/tags/') && !is_current('/about/') && !is_current('/links/'))})
+        i.fas.fa-house.fa-fw
+        span 主页
+      a.menus_item(href=url_for('/articles/') data-path='/articles/' class={active: page.layout === 'article-module' || is_current('/articles/') || is_current('/articles/tags/') || is_current('/articles/categories/') || is_current('/articles/archives/') || is_archive() || globalPageType === 'post'})
+        i.fas.fa-file-pen.fa-fw
+        span 文章
+      a.menus_item(href=url_for('/tags/') data-path='/tags/' class={active: is_current('/tags/') || is_tag()})
+        i.fas.fa-clock.fa-fw
+        span 动态
+      a.menus_item(href=url_for('/about/') data-path='/about/' class={active: is_current('/about/')})
+        i.fas.fa-circle-info.fa-fw
+        span 关于
+      a.menus_item(href=url_for('/links/') data-path='/links/' class={active: is_current('/links/')})
+        i.fas.fa-link.fa-fw
+        span 一些链接
+
+  #nav-right-icons
+    #nav-search-btn.nav-icon-btn(role='button' tabindex='0' aria-label='搜索')
+      svg.gf-nav-search-ico(viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true')
+        circle(cx='11' cy='11' r='7')
+        line(x1='21' y1='21' x2='16.65' y2='16.65')
+    #nav-theme-btn.nav-icon-btn
+      i.fas.fa-sun.fa-fw
+      .gf-theme-pop
+        .gf-theme-option(data-gf-theme='light')
+          span.gf-theme-ico ☀
+          span.gf-theme-text light
+        .gf-theme-option(data-gf-theme='dark')
+          span.gf-theme-ico ☾
+          span.gf-theme-text dark
+    span#nav-user-btn.nav-icon-btn(role='img' aria-label='用户功能暂不可用')
+      i.fas.fa-user.fa-fw(aria-hidden='true')
+
+  button#toggle-menu(type='button' aria-label='打开导航菜单' aria-expanded='false')
+    span.site-page
+      i.fas.fa-bars.fa-fw

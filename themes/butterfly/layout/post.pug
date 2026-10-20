@@ -1,0 +1,100 @@
+extends includes/layout.pug
+
+block content
+  - var gfAboutPage = null
+  - var gfPages = site.pages.toArray ? site.pages.toArray() : []
+  each p in gfPages
+    if p.layout === 'gf-about'
+      - gfAboutPage = p
+  - const gfAuthorName = (gfAboutPage && gfAboutPage.author_name) ? gfAboutPage.author_name : config.author
+  - const gfAuthorAvatar = (gfAboutPage && gfAboutPage.author_avatar) ? gfAboutPage.author_avatar : theme.avatar.img
+  - const gfAuthorDesc = (gfAboutPage && gfAboutPage.author_desc) ? gfAboutPage.author_desc : (config.subtitle || '记录与分享，步履不停。')
+  - const gfPostHasToc = /<h[1-6]\b/i.test(String(page.content || ''))
+  #post.gf-post-page
+    .gf-post-main
+      nav.gf-post-breadcrumb(aria-label='面包屑')
+        a.gf-bc-link(href=url_for('/articles/')) 文章
+        span.gf-bc-sep(aria-hidden='true') &gt;
+        a.gf-bc-current(href='#gf-post-title' aria-current='location' title=page.title)
+          span.gf-bc-current-title= page.title
+      //- 无封面文章不展示封面区域（有 cover 才渲染，避免默认标题封面误展示）
+      if page.cover
+        .gf-post-cover
+          img.gf-post-cover-img(src=url_for(page.cover) alt=page.title)
+      header.gf-post-head
+        //- 大标题位于作者|日期|字数栏上方
+        h1#gf-post-title.gf-post-title= page.title
+        //- 标题与元信息栏之间：第一行简介，第二行标签（原底部标签移至此处）
+        if gf_post_intro(page)
+          p.gf-post-intro= gf_post_intro(page)
+        if page.tags && page.tags.data.length
+          .gf-post-tags
+            each item, index in page.tags.data
+              a.gf-post-tag(href=url_for('/articles/tags/' + item.slug + '/')) #[=item.name]
+        .gf-post-head-meta
+          if page.categories.data.length
+            a.gf-post-cat-link(href=url_for(page.categories.data[0].path)) #[=page.categories.data[0].name]
+            span.gf-post-head-sep |
+          time.gf-post-head-date(datetime=date_xml(page.date))= gf_date_str(page.date)
+          if page.updated && gf_date_str(page.updated) !== gf_date_str(page.date)
+            span.gf-post-head-sep |
+            time.gf-post-head-updated(datetime=date_xml(page.updated)) 更新于 #{gf_date_str(page.updated)}
+          span.gf-post-head-sep |
+          span.gf-post-head-words
+            span= gf_word_count(page.content)
+            | 字
+      article#article-container.container.post-content.gf-post-body
+        if theme.noticeOutdate.enable && page.noticeOutdate !== false
+          include includes/post/outdate-notice.pug
+        else
+          !=(typeof gf_post_content === 'function' ? gf_post_content(page) : page.content)
+      .tag_share
+        //- 标签已移至文章头部，此处仅保留分享
+        include includes/third-party/share/index.pug
+
+      if theme.reward.enable && theme.reward.QR_code
+        !=partial('includes/post/reward', {}, {cache: true})
+
+      //- ad
+      if theme.ad && theme.ad.post
+        .ads-wrap!=theme.ad.post
+
+      //- 相关推荐（原生 related_post：同标签动态推荐，数量由 related_post.limit 控制）
+      if theme.related_post && theme.related_post.enable
+        != related_posts(page, site.posts)
+
+      if page.comments !== false && theme.comments.use
+        - var commentsJsLoad = true
+        !=partial('includes/third-party/comments/index', {}, {cache: true})
+
+    aside.gf-post-side
+      .gf-post-side-card.gf-post-author-card
+        img.gf-post-author-avatar(src=url_for(gfAuthorAvatar) alt=gfAuthorName)
+        h3.gf-post-author-name= gfAuthorName
+        p.gf-post-author-desc= gfAuthorDesc
+      .gf-post-side-card.gf-post-switch-card
+        if page.prev
+          a.gf-post-prev(href=url_for(page.prev.path))
+            span.gf-post-switch-label 上一篇
+            span.gf-post-switch-title= page.prev.title
+        else
+          span.gf-post-prev.gf-post-switch-disabled
+            span.gf-post-switch-label 上一篇
+            span.gf-post-switch-title 没有了
+        if page.next
+          a.gf-post-next(href=url_for(page.next.path))
+            span.gf-post-switch-label 下一篇
+            span.gf-post-switch-title= page.next.title
+        else
+          span.gf-post-next.gf-post-switch-disabled
+            span.gf-post-switch-label 下一篇
+            span.gf-post-switch-title 没有了
+      .gf-post-side-card.gf-post-toc-card
+        button.gf-post-toc-toggle(type="button" aria-expanded="true")
+          span 文章目录
+          i.gf-post-toc-arrow
+        .gf-post-toc-body
+          if theme.toc.post && gfPostHasToc
+            != toc(page.content, {list_number: theme.toc.number, min_depth: 1, max_depth: 3})
+          else
+            p.gf-post-toc-empty 暂无目录

@@ -1,0 +1,27 @@
+# 最近动态数据（source/_data/activities.yml）
+# 字段说明：
+#   date       - 发布时间（'YYYY-MM-DD HH:mm'）
+#   content    - 动态内容（纯文本，可含简单 Markdown 文本）
+#   images     - 配图数量（可选）
+#   image_urls - 站内配图地址列表（可选；新上传图片使用真实文件）
+#   music      - 音乐信息（可选：title / artist / audio / cover；音频与封面为站点内地址）
+#   comment_count - 评论数（可选，默认 0）
+# 类型自动推断：有 images 或 image_urls 为「图片」，有 music 为「音乐」，否则为「随记」
+- date: '2026-10-19 21:26'
+  content: |
+    想来还是记录下自己的头像，毕竟也算是“老伙计”了
+    它陪伴了我的过去，希望也会承载我的未来
+  images: 1
+  image_urls:
+    - '/img/e8177dd0e6184f84be21fde0e4dc93cc.jpg'
+  comment_count: 0
+- date: '2026-10-19 21:19'
+  content: |
+    过去从未逝去，甚至从未过去
+    这是第一次动态，就从此处开始窥探自己的过去吧...
+  music:
+    title: 'thanks'
+    artist: 'Cherry_pie'
+    audio: '/music/fe5118e93d95433d94582733a4b8e9d7.mp3'
+    cover: '/img/08cb21c106ec40b8b5e04be4a87ca1f8.jpg'
+  comment_count: 0
