@@ -7,6 +7,17 @@
 #   music      - 音乐信息（可选：title / artist / audio / cover；音频与封面为站点内地址）
 #   comment_count - 评论数（可选，默认 0）
 # 类型自动推断：有 images 或 image_urls 为「图片」，有 music 为「音乐」，否则为「随记」
+- date: '2026-09-21 13:50'
+  content: |
+    我是兄弟里最没有天赋的那一个，大家都在修罗的时候我还在蚀月挣扎，后来一个跟了一个练刘炼的 up 学会了球刀，现在他们都叫我臭轮椅
+  comment_count: 0
+- date: '2026-08-13 19:49'
+  content: |
+    感觉被天意爷针对了
+  images: 1
+  image_urls:
+    - '/img/8e689424de0146bb8d720e61ce97db5b.jpg'
+  comment_count: 0
 - date: '2026-07-19 21:26'
   content: |
     想来还是记录下自己的头像，毕竟也算是“老伙计”了
