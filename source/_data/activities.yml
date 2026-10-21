@@ -7,6 +7,13 @@
 #   music      - 音乐信息（可选：title / artist / audio / cover；音频与封面为站点内地址）
 #   comment_count - 评论数（可选，默认 0）
 # 类型自动推断：有 images 或 image_urls 为「图片」，有 music 为「音乐」，否则为「随记」
+- date: '2026-10-21 20:07'
+  content: |
+    我让老天发把刀，老天给我来一刀
+  images: 1
+  image_urls:
+    - '/img/d8804ad58c0f46bf887971fea29f920e.png'
+  comment_count: 0
 - date: '2026-09-21 13:50'
   content: |
     我是兄弟里最没有天赋的那一个，大家都在修罗的时候我还在蚀月挣扎，后来一个跟了一个练刘炼的 up 学会了球刀，现在他们都叫我臭轮椅
