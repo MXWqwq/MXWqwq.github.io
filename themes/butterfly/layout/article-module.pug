@@ -1,7 +1,8 @@
 extends includes/layout.pug
 
 block content
-  - const gfPosts = site.posts.sort('date', -1).toArray()
+  - const gfPostNewest = (a, b) => (b.date ? b.date.valueOf() : 0) - (a.date ? a.date.valueOf() : 0) || String(a.path || '').localeCompare(String(b.path || ''))
+  - const gfPosts = site.posts.toArray().sort(gfPostNewest)
   - const gfTotal = gfPosts.length
   - const gfType = page.amType || 'posts'
   #article-module
@@ -119,7 +120,7 @@ block content
                 a.gf-tag-chip(href=url_for('/articles/tags/' + tag.slug + '/') title='有' + tag.length + '篇文章')
                   span.gf-tag-name= tag.name
           when 'tag-detail'
-            - const gfTagPosts = page.amTagPosts || []
+            - const gfTagPosts = (page.amTagPosts || []).slice().sort(gfPostNewest)
             header.gf-am-stat
               span 标签「
               b= page.amTag || '标签'
@@ -161,7 +162,7 @@ block content
               .gf-cat-empty 此标签暂时没有文章
           when 'categories'
             - const gfCatMap = Object.create(null)
-            - site.categories.sort('name').toArray().forEach(function (cat) { gfCatMap[String(cat.name)] = { name: String(cat.name), slug: cat.slug, length: cat.length, posts: cat.posts.sort('date', -1).toArray(), hasPosts: true, description: '', cover: '' } })
+            - site.categories.sort('name').toArray().forEach(function (cat) { gfCatMap[String(cat.name)] = { name: String(cat.name), slug: cat.slug, length: cat.length, posts: cat.posts.toArray().sort(gfPostNewest), hasPosts: true, description: '', cover: '' } })
             - const gfRegisteredCats = site.data.categories || []
             - gfRegisteredCats.forEach(function (item) { const name = typeof item === 'string' ? item : item && item.name; if (name) { const key = String(name); const description = item && item.description ? String(item.description) : ''; const cover = item && item.cover ? String(item.cover) : ''; if (!gfCatMap[key]) gfCatMap[key] = { name: key, slug: '', length: 0, posts: [], hasPosts: false, description: description, cover: cover }; else { if (description) gfCatMap[key].description = description; if (cover) gfCatMap[key].cover = cover } } })
             - const gfCats = Object.keys(gfCatMap).map(function (name) { return gfCatMap[name] }).sort(function (a, b) { return a.name.localeCompare(b.name, 'zh-CN') })
@@ -208,7 +209,7 @@ block content
             else
               .gf-cat-empty 暂无目录
           when 'category-detail'
-            - const gfCategoryPosts = page.amCategoryPosts || []
+            - const gfCategoryPosts = (page.amCategoryPosts || []).slice().sort(gfPostNewest)
             header.gf-category-album(class='gf-category-album--' + ((page.amCategoryIndex || 0) % 4) style=page.amCategoryCover ? 'background-image: linear-gradient(rgba(245,250,252,.58), rgba(245,250,252,.82)), url(' + url_for(page.amCategoryCover) + '); background-size: cover; background-position: center;' : null)
               .gf-category-album-art(aria-hidden='true')
                 span.gf-category-album-disc

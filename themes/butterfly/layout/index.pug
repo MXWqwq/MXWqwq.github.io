@@ -13,7 +13,7 @@ block content
           span 查看全部动态
           i.fas.fa-arrow-right.fa-fw
       .gf-home-rail(data-gf-rail='')
-        - const gfActsAll = site.data.activities || []
+        - const gfActsAll = (site.data.activities || []).slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
         - const gfActs = gfActsAll.slice(0, 10)
         each act, ai in gfActs
           - const actImageUrls = Array.isArray(act.image_urls) ? act.image_urls : []
@@ -86,7 +86,7 @@ block content
         span.gf-hana-head-ico
           i.fas.fa-list.fa-fw
         h2.gf-hana-head-title 最近文章
-      - const homePosts = site.posts.data.slice().sort((a, b) => (b.date || 0) - (a.date || 0)).slice(0, 5)
+      - const homePosts = site.posts.data.slice().sort((a, b) => (b.date ? b.date.valueOf() : 0) - (a.date ? a.date.valueOf() : 0) || String(a.path || '').localeCompare(String(b.path || ''))).slice(0, 5)
       .gf-home-post-grid
         each article, idx in homePosts
           - const link = article.link || article.path

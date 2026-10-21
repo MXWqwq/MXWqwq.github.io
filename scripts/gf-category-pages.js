@@ -47,7 +47,7 @@ hexo.extend.generator.register('gf-article-category', function (locals) {
           amCategoryIndex: index,
           amCategoryDescription: categoryInfo[String(category.name)] ? categoryInfo[String(category.name)].description : '',
           amCategoryCover: categoryInfo[String(category.name)] ? categoryInfo[String(category.name)].cover : '',
-          amCategoryPosts: category.posts.sort('-date').toArray()
+          amCategoryPosts: category.posts.sort('date', -1).toArray()
         }
       };
     })

@@ -1,6 +1,7 @@
 div
   script(src=url_for(theme.asset.utils))
-  script(src=url_for(theme.asset.main))
+  - const gfMainJsUrl = url_for(theme.asset.main)
+  script(src=gfMainJsUrl + (gfMainJsUrl.includes('?') ? '&' : '?') + 'perf=20261020a')
 
   if theme.translate.enable
     script(src=url_for(theme.asset.translate))

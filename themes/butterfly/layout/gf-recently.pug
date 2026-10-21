@@ -1,7 +1,7 @@
 extends includes/layout.pug
 
 block content
-  - const gfActsAll = (site.data.activities || [])
+  - const gfActsAll = (site.data.activities || []).slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
   - const gfActsFirst = gfActsAll.slice(0, 12)
   #gf-recently
     .gf-hana-head

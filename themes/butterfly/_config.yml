@@ -1060,9 +1060,9 @@ inject:
     - <link rel="preconnect" href="https://fonts.googleapis.com">
     - <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     - <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=JetBrains+Mono:wght@400&display=swap">
-    - <link rel="stylesheet" href="/css/custom.css?v=20261020k">
+    - <link rel="stylesheet" href="/css/custom.css?v=20261020m">
   bottom:
-    - <script src="/js/custom.js?v=20261020e" defer></script>
+    - <script src="/js/custom.js?v=20261020g" defer></script>
 
 # Friend Link (Ò»Ð©Á´½Ó)
 link:

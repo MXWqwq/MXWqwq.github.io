@@ -87,4 +87,4 @@ mixin rightsideItem(array)
         i.fas.fa-volume-high
       .gf-music-vol-pop
         input.gf-music-vol(type='range' min='0' max='100' value='50' aria-label='音量')
-audio#gf-music-audio(preload='auto' src=url_for('/music/thanks.mp3'))
+audio#gf-music-audio(preload='metadata' src=url_for('/music/thanks.mp3'))

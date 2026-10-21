@@ -436,14 +436,13 @@ document.addEventListener('DOMContentLoaded', () => {
    * rightside scroll percent
    */
   const rightsideScrollPercent = currentTop => {
-    const scrollPercent = btf.getScrollPercent(currentTop, document.body)
-
     if (!goUpElement || !scrollPercentElement) return
+    const scrollPercent = btf.getScrollPercent(currentTop, document.body)
     if (scrollPercent < 95) {
-      goUpElement.classList.add('show-percent')
-      scrollPercentElement.textContent = scrollPercent
+      if (!goUpElement.classList.contains('show-percent')) goUpElement.classList.add('show-percent')
+      if (scrollPercentElement.textContent !== String(scrollPercent)) scrollPercentElement.textContent = scrollPercent
     } else {
-      goUpElement.classList.remove('show-percent')
+      if (goUpElement.classList.contains('show-percent')) goUpElement.classList.remove('show-percent')
     }
   }
 
@@ -564,13 +563,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!$articleList.length) return
 
     let activeTocItem = null
+    let activeTocId = null
     let activeParentItems = []
+    const tocLinkById = new Map()
+    if (isToc) {
+      $tocLink.forEach(link => {
+        const href = link.getAttribute('href')
+        if (!href) return
+        const id = decodeURI(href).replace('#', '')
+        if (!tocLinkById.has(id)) tocLinkById.set(id, link)
+      })
+    }
 
     const updateTocUI = currentId => {
       const encodedAnchor = currentId ? '#' + encodeURI(decodeURI(currentId)) : ''
       if (isAnchor) btf.updateAnchor(encodedAnchor)
 
       if (!isToc) return
+      if (activeTocId === currentId) return
+      activeTocId = currentId
 
       if (activeTocItem) activeTocItem.classList.remove('active')
       activeParentItems.forEach(i => i.classList.remove('active'))
@@ -581,11 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return
       }
 
-      const targetLink = Array.from($tocLink).find(link => {
-        const href = link.getAttribute('href')
-        if (!href) return false
-        return decodeURI(href).replace('#', '') === decodeURI(currentId)
-      })
+      const targetLink = tocLinkById.get(decodeURI(currentId))
 
       if (!targetLink) return
 

@@ -110,7 +110,12 @@
 
   function matchPost(p, words) {
     if (!words.length) return false
-    var hay = [p.title, p.desc, p.body, (p.tags || []).join(' '), (p.categories || []).join(' ')].join(' ').toLowerCase()
+    // Build the searchable text once; typing a query must not rebuild every article body.
+    var hay = p.__gfSearchHay
+    if (hay == null) {
+      hay = [p.title, p.desc, p.body, (p.tags || []).join(' '), (p.categories || []).join(' ')].join(' ').toLowerCase()
+      p.__gfSearchHay = hay
+    }
     for (var i = 0; i < words.length; i++) {
       if (hay.indexOf(words[i]) === -1) return false
     }
@@ -414,6 +419,18 @@
       var keepEnter = curMain.classList.contains('gf-main-enter')
       if (curMain.className !== nextMain.className) curMain.className = nextMain.className
       if (keepEnter) curMain.classList.add('gf-main-enter')
+      // Release observers bound to the outgoing main before its nodes are removed.
+      curMain.querySelectorAll('.gf-home-rail[data-gf-rail]').forEach(function (rail) {
+        if (rail.__gfLoadMoreIo) {
+          rail.__gfLoadMoreIo.disconnect()
+          rail.__gfLoadMoreIo = null
+        }
+      })
+      var oldTimeline = curMain.querySelector('#gf-recently')
+      if (oldTimeline && oldTimeline.__gfTlIo) {
+        oldTimeline.__gfTlIo.disconnect()
+        oldTimeline.__gfTlIo = null
+      }
       curMain.innerHTML = nextMain.innerHTML
     }
   }
@@ -960,7 +977,7 @@
     var items = Array.prototype.slice.call(el.children)
     items.forEach(function (child, index) {
       setTimeout(function () {
-        child.style.transition = 'all .2s ease'
+        child.style.transition = 'opacity .2s ease, top .2s ease'
         child.style.opacity = '1'
         child.style.top = '0'
       }, index * 40)
@@ -1083,6 +1100,8 @@
       var ropeVelocity = 0
       var ropeTileWidth = 48
       var lastRopePhase = ''
+      var lastRopeWave = ''
+      var lastCardSway = ''
 
       /* 纹理与滑动同步向反方向移动；每一格恰好循环一次，不产生无限增长的位置值。 */
       function renderRailPhase() {
@@ -1093,8 +1112,16 @@
       }
 
       function renderRailMotion() {
-        rail.style.setProperty('--gf-rope-wave', ropeOffset.toFixed(2) + 'px')
-        rail.style.setProperty('--gf-card-sway', (ropeOffset * 0.125).toFixed(2) + 'deg')
+        var wave = ropeOffset.toFixed(2) + 'px'
+        var sway = (ropeOffset * 0.125).toFixed(2) + 'deg'
+        if (wave !== lastRopeWave) {
+          lastRopeWave = wave
+          rail.style.setProperty('--gf-rope-wave', wave)
+        }
+        if (sway !== lastCardSway) {
+          lastCardSway = sway
+          rail.style.setProperty('--gf-card-sway', sway)
+        }
       }
 
       function settleRailMotion() {
@@ -1107,6 +1134,7 @@
 
       function animateRailMotion(ts) {
         motionRaf = null
+        if (!rail.isConnected) return
         renderRailPhase()
         if (motionPreference && motionPreference.matches) {
           settleRailMotion()
@@ -1154,6 +1182,7 @@
         cancelAnimationFrame(raf)
         var lastTs = performance.now()
         function step(ts) {
+          if (!rail.isConnected) return
           if (Math.abs(speed) < 0.05) return
           var dt = Math.min(ts - lastTs, 40) / 16.67
           lastTs = ts
@@ -1376,13 +1405,12 @@
             var node = wrap.firstChild
             if (node) frag.appendChild(node)
           })
+          fillRelativeTimes(frag)
           rail.insertBefore(frag, trigger)
           updateActivityTextFade(rail)
           page++
           loading = false
           done = page * GF_HOME_PAGE_SIZE >= all.length
-          /* 新卡片补齐相对时间 */
-          fillRelativeTimes(rail)
           if (done) finish()
         })
       }
@@ -1407,8 +1435,17 @@
 /* 文章详情页初始化（grey-flowers 风格）：TOC 折叠切换 + 平滑滚动 + 滚动高亮。
    伪 SPA 替换 main 后由 afterSwap 重新调用（每次重建 DOM 均重新绑定）。 */
 (function () {
+  var activeTocObserver = null
+  var activeTocPage = null
+
   window.__gfPostInit = function () {
     var page = document.querySelector('#post.gf-post-page')
+    if (page === activeTocPage) return
+    if (activeTocObserver) {
+      activeTocObserver.disconnect()
+      activeTocObserver = null
+    }
+    activeTocPage = page
     if (!page) return
 
     /* TOC 折叠 */
@@ -1451,6 +1488,7 @@
         })
       }, { rootMargin: '-80px 0px -70% 0px' })
       headings.forEach(function (h) { obs.observe(h) })
+      activeTocObserver = obs
     }
   }
 })();
@@ -1553,6 +1591,7 @@
     var io = null
     function finish() {
       if (io) { io.disconnect(); io = null }
+      root.__gfTlIo = null
       trigger.classList.remove('gf-loading')
       trigger.classList.add('gf-done')
     }
@@ -1594,36 +1633,50 @@
       var entry = entries[0]
       if (entry && entry.isIntersecting) loadNext()
     }, { rootMargin: '200px 0px 0px 0px', threshold: 0 })
+    root.__gfTlIo = io
     io.observe(trigger)
   }
 
   /* 动态页滚动进度只读显示；全局监听在 PJAX 往返时复用当前节点 */
+  var scrollProgressIndicator = null
+  var scrollProgressNum = null
+  var scrollProgressLast = ''
+  var scrollProgressRaf = 0
+
+  function updateScrollProgress() {
+    scrollProgressRaf = 0
+    var indicator = scrollProgressIndicator
+    var num = scrollProgressNum
+    if (!indicator || !num || !indicator.isConnected) return
+    var doc = document.documentElement
+    var total = doc.scrollHeight - doc.clientHeight
+    var y = window.scrollY || doc.scrollTop || 0
+    var percent = total <= 0 ? '0%' : Math.min(100, Math.ceil(y / total * 100)) + '%'
+    if (percent === scrollProgressLast) return
+    scrollProgressLast = percent
+    num.textContent = percent
+    indicator.setAttribute('aria-label', '当前页面滚动进度 ' + percent)
+    indicator.setAttribute('title', '当前页面滚动进度 ' + percent)
+  }
+
+  function scheduleScrollProgress() {
+    if (!scrollProgressIndicator || scrollProgressRaf) return
+    scrollProgressRaf = requestAnimationFrame(updateScrollProgress)
+  }
+
   function initScrollProgress() {
-    function update() {
-      var indicator = document.querySelector('.gf-scroll-progress')
-      if (!indicator) return
-      var num = indicator.querySelector('.gf-scroll-progress-num')
-      if (!num) return
-      var doc = document.documentElement
-      var total = doc.scrollHeight - doc.clientHeight
-      if (total <= 0) {
-        num.textContent = '0%'
-        indicator.setAttribute('aria-label', '当前页面滚动进度 0%')
-        indicator.setAttribute('title', '当前页面滚动进度 0%')
-        return
-      }
-      var y = window.scrollY || doc.scrollTop || 0
-      var percent = Math.min(100, Math.ceil(y / total * 100)) + '%'
-      num.textContent = percent
-      indicator.setAttribute('aria-label', '当前页面滚动进度 ' + percent)
-      indicator.setAttribute('title', '当前页面滚动进度 ' + percent)
+    var indicator = document.querySelector('.gf-scroll-progress')
+    if (indicator !== scrollProgressIndicator) {
+      scrollProgressIndicator = indicator
+      scrollProgressNum = indicator && indicator.querySelector('.gf-scroll-progress-num')
+      scrollProgressLast = ''
     }
     if (!window.__gfScrollProgressBound) {
       window.__gfScrollProgressBound = true
-      window.addEventListener('scroll', update, { passive: true })
-      window.addEventListener('resize', update, { passive: true })
+      window.addEventListener('scroll', scheduleScrollProgress, { passive: true })
+      window.addEventListener('resize', scheduleScrollProgress, { passive: true })
     }
-    update()
+    updateScrollProgress()
   }
 
   /* ============ 动态详情弹窗（复刻 Grey Flowers DetailDialog / HanaDialog） ============
@@ -2145,21 +2198,6 @@
     setPlaying(true)
   })
 
-  /* 自动播放启动：立即以 muted 播放（不等待 fetch，保证刷新后马上处于播放状态，3 秒后尝试有声） */
+  /* 自动播放启动：直接使用音频元素流式加载，避免同时整首抓取为 Blob 造成重复下载和内存占用。 */
   startAutoplayPipeline()
-
-  var gfRawSrc = audio.src || audio.getAttribute('src')
-  if (gfRawSrc && !/^blob:/i.test(gfRawSrc)) {
-    fetch(gfRawSrc).then(function (resp) {
-      if (!resp.ok) throw new Error('fetch ' + resp.status)
-      return resp.blob()
-    }).then(function (blob) {
-      var wasPlaying = !audio.paused
-      audio.src = URL.createObjectURL(blob)
-      // 换 src 会中断播放：播放中则按当前 muted 状态恢复（muted 必成功，有声被拒自动回退静音）
-      if (wasPlaying && !gfActivityDuckActive) {
-        gfResumePlay()
-      }
-    }).catch(function () {})
-  }
 })();

@@ -7,7 +7,7 @@
 #   music      - 音乐信息（可选：title / artist / audio / cover；音频与封面为站点内地址）
 #   comment_count - 评论数（可选，默认 0）
 # 类型自动推断：有 images 或 image_urls 为「图片」，有 music 为「音乐」，否则为「随记」
-- date: '2026-10-19 21:26'
+- date: '2026-07-19 21:26'
   content: |
     想来还是记录下自己的头像，毕竟也算是“老伙计”了
     它陪伴了我的过去，希望也会承载我的未来
@@ -15,7 +15,7 @@
   image_urls:
     - '/img/e8177dd0e6184f84be21fde0e4dc93cc.jpg'
   comment_count: 0
-- date: '2026-10-19 21:19'
+- date: '2025-07-19 21:21'
   content: |
     过去从未逝去，甚至从未过去
     这是第一次动态，就从此处开始窥探自己的过去吧...
